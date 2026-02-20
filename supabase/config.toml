@@ -1,1 +1,4 @@
 project_id = "jvqzjbigdctgwajaealt"
+
+[functions.analyze-trade-sensei]
+verify_jwt = false

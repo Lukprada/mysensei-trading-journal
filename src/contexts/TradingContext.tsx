@@ -12,6 +12,7 @@ interface TradingContextType {
   addTrade: (data: TradeFormData) => void;
   deleteTrade: (id: string) => void;
   getTradeById: (id: string) => Trade | undefined;
+  updateTradeCritique: (tradeId: string, critique: string) => void;
 }
 
 const TradingContext = createContext<TradingContextType | null>(null);
@@ -109,8 +110,14 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
 
   const getTradeById = useCallback((id: string) => allTrades.find((t) => t.id === id), [allTrades]);
 
+  const updateTradeCritique = useCallback((tradeId: string, critique: string) => {
+    setAllTrades((prev) =>
+      prev.map((t) => (t.id === tradeId ? { ...t, aiCritique: critique } : t))
+    );
+  }, []);
+
   return (
-    <TradingContext.Provider value={{ accounts, activeAccountId, activeAccount, trades, allTrades, addAccount, setActiveAccount, addTrade, deleteTrade, getTradeById }}>
+    <TradingContext.Provider value={{ accounts, activeAccountId, activeAccount, trades, allTrades, addAccount, setActiveAccount, addTrade, deleteTrade, getTradeById, updateTradeCritique }}>
       {children}
     </TradingContext.Provider>
   );
