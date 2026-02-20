@@ -27,6 +27,7 @@ export interface Trade {
   mentalState: MentalState;
   notes: string;
   screenshotUrl?: string;
+  aiCritique?: string;
   createdAt: string;
 }
 
