@@ -38,6 +38,143 @@ Analyze the trade data provided. Follow this structure:
 Keep the response under 150 words. Be supportive but firm. Never sugarcoat. Use short, punchy sentences.`;
 }
 
+function buildUserContent(tradeDetails: any, userNotes: string, userMood: string, screenshotUrl: string | null, accountType: string): any[] {
+  const content: any[] = [
+    {
+      type: "text",
+      text: `Trade Details:
+- Asset: ${tradeDetails.asset}
+- Direction: ${tradeDetails.direction}
+- Entry: ${tradeDetails.entry_price} → Exit: ${tradeDetails.exit_price}
+- Pips: ${tradeDetails.pips > 0 ? "+" : ""}${tradeDetails.pips}
+- P&L: ${tradeDetails.pnl >= 0 ? "+$" : "-$"}${Math.abs(tradeDetails.pnl).toFixed(2)}
+- Position Size: ${tradeDetails.position_size} lots
+- Account Type: ${accountType}
+
+Mental State: ${userMood}
+Trader's Notes: ${userNotes || "No notes provided."}`,
+    },
+  ];
+
+  if (screenshotUrl) {
+    content.push({
+      type: "image_url",
+      image_url: { url: screenshotUrl },
+    });
+  }
+
+  return content;
+}
+
+async function callGeminiDirect(apiKey: string, systemPrompt: string, userContent: any[]): Promise<Response> {
+  // Use Gemini REST API directly with the user's key
+  const textParts = userContent.filter((c: any) => c.type === "text").map((c: any) => ({ text: c.text }));
+  const imageParts = userContent.filter((c: any) => c.type === "image_url").map((c: any) => ({
+    inline_data: { mime_type: "image/jpeg", data: "" }, // URL-based not supported, pass as text hint
+  }));
+
+  // For vision, we'll include the screenshot URL as text since direct URL isn't supported in all Gemini endpoints
+  const allText = userContent.map((c: any) => {
+    if (c.type === "text") return c.text;
+    if (c.type === "image_url") return `[Chart Screenshot: ${c.image_url.url}]`;
+    return "";
+  }).join("\n\n");
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: "user", parts: [{ text: allText }] }],
+        generationConfig: { maxOutputTokens: 500, temperature: 0.8 },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.status}`);
+  }
+
+  // Transform Gemini SSE to OpenAI-compatible SSE format
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+  
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
+      let buffer = "";
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+          break;
+        }
+        
+        buffer += decoder.decode(value, { stream: true });
+        let newlineIdx: number;
+        while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
+          const line = buffer.slice(0, newlineIdx).trim();
+          buffer = buffer.slice(newlineIdx + 1);
+          
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6);
+          if (!jsonStr) continue;
+          
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              const openAiChunk = {
+                choices: [{ delta: { content: text }, index: 0 }],
+              };
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAiChunk)}\n\n`));
+            }
+          } catch {
+            // skip
+          }
+        }
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+  });
+}
+
+async function callLovableAI(apiKey: string, systemPrompt: string, userContent: any[]): Promise<Response> {
+  const response = await fetch(
+    "https://ai.gateway.lovable.dev/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
+        stream: true,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Lovable AI error: ${response.status}`);
+  }
+
+  return new Response(response.body, {
+    headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -47,79 +184,46 @@ serve(async (req) => {
     const { trade_details, user_notes, user_mood, screenshot_url, account_type } =
       await req.json();
 
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+
+    const systemPrompt = buildSystemPrompt(account_type);
+    const userContent = buildUserContent(trade_details, user_notes, user_mood, screenshot_url, account_type);
+
+    // Try Gemini first (user's own key), fall back to Lovable AI
+    if (GEMINI_API_KEY) {
+      try {
+        console.log("Using user's Gemini API key");
+        return await callGeminiDirect(GEMINI_API_KEY, systemPrompt, userContent);
+      } catch (e) {
+        console.error("Gemini API failed, falling back to Lovable AI:", e);
+      }
     }
 
-    const userContent: any[] = [
-      {
-        type: "text",
-        text: `Trade Details:
-- Asset: ${trade_details.asset}
-- Direction: ${trade_details.direction}
-- Entry: ${trade_details.entry_price} → Exit: ${trade_details.exit_price}
-- Pips: ${trade_details.pips > 0 ? "+" : ""}${trade_details.pips}
-- P&L: ${trade_details.pnl >= 0 ? "+$" : "-$"}${Math.abs(trade_details.pnl).toFixed(2)}
-- Position Size: ${trade_details.position_size} lots
-- Account Type: ${account_type}
-
-Mental State: ${user_mood}
-Trader's Notes: ${user_notes || "No notes provided."}`,
-      },
-    ];
-
-    // If screenshot URL provided, include it for vision analysis
-    if (screenshot_url) {
-      userContent.push({
-        type: "image_url",
-        image_url: { url: screenshot_url },
-      });
+    if (LOVABLE_API_KEY) {
+      console.log("Using Lovable AI fallback");
+      const resp = await callLovableAI(LOVABLE_API_KEY, systemPrompt, userContent);
+      
+      if (!resp.ok) {
+        if (resp.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limit exceeded. Try again in a moment." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        if (resp.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "AI credits exhausted. Please top up your workspace." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        throw new Error(`Lovable AI error: ${resp.status}`);
+      }
+      
+      return resp;
     }
 
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: buildSystemPrompt(account_type) },
-            { role: "user", content: userContent },
-          ],
-          stream: true,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Try again in a moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Please top up your workspace." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errText = await response.text();
-      console.error("AI gateway error:", response.status, errText);
-      return new Response(
-        JSON.stringify({ error: "AI analysis failed" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-    });
+    throw new Error("No AI provider configured. Add GEMINI_API_KEY or LOVABLE_API_KEY.");
   } catch (e) {
     console.error("analyze-trade-sensei error:", e);
     return new Response(

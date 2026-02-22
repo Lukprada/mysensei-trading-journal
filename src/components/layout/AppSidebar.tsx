@@ -1,6 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
-import { LayoutDashboard, PlusCircle, List, Settings } from "lucide-react";
+import { LayoutDashboard, PlusCircle, List, Calendar } from "lucide-react";
 import { AccountSelector } from "@/components/AccountSelector";
 import {
   Sidebar,
@@ -27,10 +26,10 @@ export function AppSidebar() {
       <SidebarHeader className="p-4 border-b border-border">
         <div className="flex items-center gap-2 mb-4">
           <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm font-mono">TJ</span>
+            <span className="text-primary-foreground font-bold text-sm font-display">TJ</span>
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-foreground">TradeJournal</h1>
+            <h1 className="text-sm font-semibold text-foreground font-display tracking-wider">TRADEJOURNAL</h1>
             <p className="text-xs text-muted-foreground">Performance Tracker</p>
           </div>
         </div>
@@ -63,7 +62,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">v1.0 — Trade Smarter</p>
+        <p className="text-xs text-muted-foreground font-display tracking-wider">V1.0 — TRADE SMARTER</p>
       </SidebarFooter>
     </Sidebar>
   );
