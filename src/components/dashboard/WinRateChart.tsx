@@ -13,7 +13,7 @@ export function WinRateChart() {
     ...(breakeven > 0 ? [{ name: "Breakeven", value: breakeven }] : []),
   ];
 
-  const COLORS = ["hsl(142, 71%, 45%)", "hsl(0, 84%, 60%)", "hsl(212, 9%, 58%)"];
+  const COLORS = ["hsl(217, 91%, 60%)", "hsl(25, 95%, 53%)", "hsl(215, 12%, 52%)"];
   const winRate = trades.length > 0 ? ((wins / trades.length) * 100).toFixed(1) : "0";
 
   return (
@@ -28,7 +28,7 @@ export function WinRateChart() {
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{ backgroundColor: "hsl(215, 21%, 11%)", border: "1px solid hsl(215, 14%, 21%)", borderRadius: 8, fontSize: 12 }}
+              contentStyle={{ backgroundColor: "hsl(220, 20%, 10%)", border: "1px solid hsl(220, 16%, 18%)", borderRadius: 8, fontSize: 12 }}
             />
           </PieChart>
         </ResponsiveContainer>

@@ -1,5 +1,5 @@
 import { useTrading } from "@/contexts/TradingContext";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { useMemo } from "react";
 
 export function EquityCurve() {
@@ -30,18 +30,18 @@ export function EquityCurve() {
           <AreaChart data={data}>
             <defs>
               <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="hsl(142, 71%, 45%)" stopOpacity={0} />
+                <stop offset="0%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis dataKey="date" tick={{ fill: "hsl(212, 9%, 58%)", fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "hsl(212, 9%, 58%)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+            <XAxis dataKey="date" tick={{ fill: "hsl(215, 12%, 52%)", fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "hsl(215, 12%, 52%)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
             <Tooltip
-              contentStyle={{ backgroundColor: "hsl(215, 21%, 11%)", border: "1px solid hsl(215, 14%, 21%)", borderRadius: 8, fontSize: 12 }}
-              labelStyle={{ color: "hsl(208, 39%, 93%)" }}
+              contentStyle={{ backgroundColor: "hsl(220, 20%, 10%)", border: "1px solid hsl(220, 16%, 18%)", borderRadius: 8, fontSize: 12 }}
+              labelStyle={{ color: "hsl(210, 40%, 94%)" }}
               formatter={(v: number) => [`$${v.toLocaleString()}`, "Equity"]}
             />
-            <Area type="monotone" dataKey="equity" stroke="hsl(142, 71%, 45%)" strokeWidth={2} fill="url(#equityGrad)" />
+            <Area type="monotone" dataKey="equity" stroke="hsl(217, 91%, 60%)" strokeWidth={2} fill="url(#equityGrad)" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
