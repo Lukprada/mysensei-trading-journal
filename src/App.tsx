@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import TradeLog from "./pages/TradeLog";
 import NewTrade from "./pages/NewTrade";
 import TradeView from "./pages/TradeView";
+import SenseiChat from "./pages/SenseiChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
