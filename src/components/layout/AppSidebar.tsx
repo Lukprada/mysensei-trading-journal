@@ -18,6 +18,7 @@ const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "New Trade", url: "/new-trade", icon: PlusCircle },
   { title: "Trade Log", url: "/trade-log", icon: List },
+  { title: "Sensei", url: "/sensei", icon: Brain },
 ];
 
 export function AppSidebar() {

@@ -27,6 +27,7 @@ const App = () => (
               <Route path="/trade-log" element={<TradeLog />} />
               <Route path="/new-trade" element={<NewTrade />} />
               <Route path="/trade/:id" element={<TradeView />} />
+              <Route path="/sensei" element={<SenseiChat />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AppLayout>
