@@ -1,18 +1,20 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useTrading } from "@/contexts/TradingContext";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowUpRight, ArrowDownRight, Brain, Sparkles, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ArrowLeft, ArrowUpRight, ArrowDownRight, Brain, Sparkles, Eye, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import { streamSenseiChat, type ChatMessage } from "@/lib/streamChat";
 
 const mentalStateEmoji: Record<string, string> = {
   confident: "😎",
   anxious: "😰",
   impulsive: "⚡",
 };
-
-const ANALYZE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-trade-sensei`;
 
 const TradeView = () => {
   const { id } = useParams();
@@ -22,111 +24,102 @@ const TradeView = () => {
   const account = accounts.find((a) => a.id === trade?.accountId);
 
   const [senseiOpen, setSenseiOpen] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [streamedText, setStreamedText] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [userInput, setUserInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Show saved critique on load
+  // Load saved conversation
   useEffect(() => {
     if (trade?.aiCritique) {
-      setStreamedText(trade.aiCritique);
+      try {
+        const parsed = JSON.parse(trade.aiCritique);
+        if (Array.isArray(parsed)) {
+          setChatMessages(parsed);
+          setSenseiOpen(true);
+          return;
+        }
+      } catch { /* legacy string format */ }
+      // Legacy: single string critique → convert to message
+      setChatMessages([{ role: "assistant", content: trade.aiCritique }]);
       setSenseiOpen(true);
     }
-  }, [trade?.aiCritique]);
+  }, [trade?.id]);
 
-  // Auto-scroll critique panel
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [streamedText]);
+  }, [chatMessages]);
 
-  const analyzeTrade = useCallback(async () => {
-    if (!trade || !account) return;
-    setIsAnalyzing(true);
+  const tradeContext = trade && account ? {
+    trade_details: {
+      asset: trade.asset,
+      direction: trade.direction,
+      entry_price: trade.entryPrice,
+      exit_price: trade.exitPrice,
+      pips: trade.pips,
+      pnl: trade.pnl,
+      position_size: trade.positionSize,
+    },
+    user_notes: trade.notes,
+    user_mood: trade.mentalState,
+    screenshot_url: trade.screenshotUrl || null,
+    account_type: account.type,
+  } : undefined;
+
+  const sendMessage = useCallback(async (initialCritique = false) => {
+    if (!trade || !tradeContext) return;
+
+    const newMessages = [...chatMessages];
+    if (!initialCritique && userInput.trim()) {
+      newMessages.push({ role: "user", content: userInput.trim() });
+      setUserInput("");
+    }
+
+    setChatMessages(newMessages);
+    setIsStreaming(true);
     setSenseiOpen(true);
-    setStreamedText("");
+
+    let assistantText = "";
+
+    // Determine which messages to send to API
+    const apiMessages = initialCritique ? [] : newMessages;
 
     try {
-      const resp = await fetch(ANALYZE_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      await streamSenseiChat({
+        messages: initialCritique ? [] : newMessages,
+        tradeContext,
+        onDelta: (chunk) => {
+          assistantText += chunk;
+          setChatMessages([...newMessages, { role: "assistant", content: assistantText }]);
         },
-        body: JSON.stringify({
-          trade_details: {
-            asset: trade.asset,
-            direction: trade.direction,
-            entry_price: trade.entryPrice,
-            exit_price: trade.exitPrice,
-            pips: trade.pips,
-            pnl: trade.pnl,
-            position_size: trade.positionSize,
-          },
-          user_notes: trade.notes,
-          user_mood: trade.mentalState,
-          screenshot_url: trade.screenshotUrl || null,
-          account_type: account.type,
-        }),
+        onDone: () => {
+          setIsStreaming(false);
+          const final = [...newMessages, { role: "assistant" as const, content: assistantText }];
+          setChatMessages(final);
+          updateTradeCritique(trade.id, JSON.stringify(final));
+        },
+        onError: (status) => {
+          setIsStreaming(false);
+          if (status === 429) toast.error("Rate limit hit — try again in a moment.");
+          else if (status === 402) toast.error("AI credits exhausted.");
+          else toast.error("Sensei couldn't respond.");
+        },
       });
-
-      if (!resp.ok || !resp.body) {
-        if (resp.status === 429) {
-          toast.error("Rate limit hit — try again in a moment.");
-        } else if (resp.status === 402) {
-          toast.error("AI credits exhausted. Top up your workspace to continue.");
-        } else {
-          toast.error("Sensei couldn't analyze this trade.");
-        }
-        setIsAnalyzing(false);
-        return;
-      }
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let fullText = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
-          let line = buffer.slice(0, newlineIndex);
-          buffer = buffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              fullText += content;
-              setStreamedText(fullText);
-            }
-          } catch {
-            buffer = line + "\n" + buffer;
-            break;
-          }
-        }
-      }
-
-      // Persist the critique
-      if (fullText && trade.id) {
-        updateTradeCritique(trade.id, fullText);
-      }
     } catch (e) {
       console.error("Sensei error:", e);
-      toast.error("Failed to reach Sensei. Check your connection.");
-    } finally {
-      setIsAnalyzing(false);
+      toast.error("Failed to reach Sensei.");
+      setIsStreaming(false);
     }
-  }, [trade, account, updateTradeCritique]);
+  }, [trade, tradeContext, chatMessages, userInput, updateTradeCritique]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey && userInput.trim() && !isStreaming) {
+      e.preventDefault();
+      sendMessage(false);
+    }
+  };
 
   if (!trade) {
     return (
@@ -172,7 +165,6 @@ const TradeView = () => {
             </div>
           </div>
 
-          {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { label: "Entry", value: trade.entryPrice.toString() },
@@ -187,14 +179,12 @@ const TradeView = () => {
             ))}
           </div>
 
-          {/* Screenshot */}
           {trade.screenshotUrl && (
             <div className="rounded-lg border border-border overflow-hidden">
               <img src={trade.screenshotUrl} alt="Trade chart" className="w-full object-cover max-h-80" />
             </div>
           )}
 
-          {/* Notes */}
           {trade.notes && (
             <div className="rounded-lg border border-border bg-card p-4">
               <h3 className="text-sm font-medium text-foreground mb-2">Notes</h3>
@@ -202,90 +192,99 @@ const TradeView = () => {
             </div>
           )}
 
-          {/* Sensei Button */}
-          <Button
-            onClick={analyzeTrade}
-            disabled={isAnalyzing}
-            className="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 gap-2 font-semibold"
-          >
-            {isAnalyzing ? (
-              <>
-                <Eye className="h-4 w-4 animate-pulse" /> Sensei is reviewing...
-              </>
-            ) : trade.aiCritique ? (
-              <>
-                <Sparkles className="h-4 w-4" /> Re-analyze with Sensei
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" /> Get Sensei's Critique
-              </>
-            )}
-          </Button>
+          {chatMessages.length === 0 && (
+            <Button
+              onClick={() => sendMessage(true)}
+              disabled={isStreaming}
+              className="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 gap-2 font-semibold"
+            >
+              <Sparkles className="h-4 w-4" /> Get Sensei's Critique
+            </Button>
+          )}
         </motion.div>
 
-        {/* Sensei Side Panel */}
+        {/* Sensei Chat Panel */}
         <AnimatePresence>
           {senseiOpen && (
             <motion.div
               initial={{ opacity: 0, x: 30, width: 0 }}
-              animate={{ opacity: 1, x: 0, width: 340 }}
+              animate={{ opacity: 1, x: 0, width: 380 }}
               exit={{ opacity: 0, x: 30, width: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="shrink-0 rounded-lg border border-border bg-card self-start sticky top-20 overflow-hidden"
+              className="shrink-0 rounded-lg border border-border bg-card self-start sticky top-20 overflow-hidden flex flex-col"
+              style={{ maxHeight: "calc(100vh - 120px)" }}
             >
-              <div className="p-4">
-                {/* Header */}
-                <div className="flex items-center gap-3 mb-4">
+              {/* Header */}
+              <div className="p-4 border-b border-border">
+                <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <Brain className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-foreground">Sensei's Corner</h3>
-                    <p className="text-xs text-muted-foreground">Trading Psychologist & Risk Manager</p>
+                    <p className="text-xs text-muted-foreground">Ask follow-ups about this trade</p>
                   </div>
                 </div>
-
-                {/* Trade context badge */}
-                <div className="rounded-lg bg-secondary p-3 mb-4">
-                  <p className="text-xs text-muted-foreground mb-1">Reviewing</p>
-                  <p className="text-sm text-foreground font-medium">
-                    {trade.asset} {trade.direction} · {trade.pips > 0 ? "+" : ""}{trade.pips} pips · {mentalStateEmoji[trade.mentalState]} {trade.mentalState}
-                  </p>
-                </div>
-
-                {/* Analysis content */}
-                <div
-                  ref={scrollRef}
-                  className="rounded-lg bg-primary/5 border border-primary/20 p-4 max-h-[400px] overflow-y-auto"
-                >
-                  {isAnalyzing && !streamedText && (
-                    <div className="flex flex-col items-center gap-3 py-6">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Eye className="h-6 w-6 text-primary animate-pulse" />
-                      </div>
-                      <p className="text-sm text-muted-foreground text-center animate-pulse">
-                        Sensei is reviewing your charts...
-                      </p>
-                    </div>
-                  )}
-
-                  {streamedText && (
-                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                      {streamedText}
-                      {isAnalyzing && (
-                        <span className="inline-block w-1.5 h-4 bg-primary ml-0.5 animate-pulse rounded-sm" />
-                      )}
-                    </p>
-                  )}
-                </div>
-
-                {trade.aiCritique && !isAnalyzing && (
-                  <p className="text-xs text-muted-foreground mt-3 text-center">
-                    Critique saved · click re-analyze to refresh
-                  </p>
-                )}
               </div>
+
+              {/* Messages */}
+              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+                {chatMessages.length === 0 && isStreaming && (
+                  <div className="flex flex-col items-center gap-3 py-6">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Eye className="h-6 w-6 text-primary animate-pulse" />
+                    </div>
+                    <p className="text-sm text-muted-foreground text-center animate-pulse">
+                      Sensei is reviewing your trade...
+                    </p>
+                  </div>
+                )}
+
+                {chatMessages.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[90%] rounded-lg px-3 py-2 text-sm ${
+                      msg.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-primary/5 border border-primary/20 text-foreground"
+                    }`}>
+                      {msg.role === "assistant" ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1 [&>p:last-child]:mb-0">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          {isStreaming && i === chatMessages.length - 1 && (
+                            <span className="inline-block w-1.5 h-4 bg-primary ml-0.5 animate-pulse rounded-sm" />
+                          )}
+                        </div>
+                      ) : (
+                        <p>{msg.content}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Input */}
+              {chatMessages.length > 0 && (
+                <div className="p-3 border-t border-border">
+                  <div className="flex gap-2">
+                    <Input
+                      value={userInput}
+                      onChange={(e) => setUserInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Ask Sensei a follow-up..."
+                      disabled={isStreaming}
+                      className="text-sm"
+                    />
+                    <Button
+                      size="icon"
+                      onClick={() => sendMessage(false)}
+                      disabled={isStreaming || !userInput.trim()}
+                      className="shrink-0"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
