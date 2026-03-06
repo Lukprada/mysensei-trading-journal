@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, PlusCircle, List, Calendar } from "lucide-react";
+import { LayoutDashboard, PlusCircle, List, Brain } from "lucide-react";
 import { AccountSelector } from "@/components/AccountSelector";
 import {
   Sidebar,
