@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, PlusCircle, List, Calendar } from "lucide-react";
+import { LayoutDashboard, PlusCircle, List, Brain } from "lucide-react";
 import { AccountSelector } from "@/components/AccountSelector";
 import {
   Sidebar,
@@ -18,6 +18,7 @@ const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "New Trade", url: "/new-trade", icon: PlusCircle },
   { title: "Trade Log", url: "/trade-log", icon: List },
+  { title: "Sensei", url: "/sensei", icon: Brain },
 ];
 
 export function AppSidebar() {

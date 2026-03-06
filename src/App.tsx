@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import TradeLog from "./pages/TradeLog";
 import NewTrade from "./pages/NewTrade";
 import TradeView from "./pages/TradeView";
+import SenseiChat from "./pages/SenseiChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/trade-log" element={<TradeLog />} />
               <Route path="/new-trade" element={<NewTrade />} />
               <Route path="/trade/:id" element={<TradeView />} />
+              <Route path="/sensei" element={<SenseiChat />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AppLayout>
