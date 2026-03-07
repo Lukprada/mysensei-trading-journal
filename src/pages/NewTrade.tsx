@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, X, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Upload, X, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 const NewTrade = () => {
-  const { addTrade, activeAccountId, accounts } = useTrading();
+  const { addTrade, activeAccountId, accounts, uploadScreenshot } = useTrading();
   const navigate = useNavigate();
 
   const [form, setForm] = useState<TradeFormData>({
@@ -28,30 +28,45 @@ const NewTrade = () => {
 
   const [dragOver, setDragOver] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleFileUpload = useCallback(async (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    setUploading(true);
+    const url = await uploadScreenshot(file);
+    if (url) {
+      setScreenshot(url);
+      toast.success("Screenshot uploaded!");
+    }
+    setUploading(false);
+  }, [uploadScreenshot]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setScreenshot(ev.target?.result as string);
-      reader.readAsDataURL(file);
-    }
-  }, []);
+    if (file) handleFileUpload(file);
+  }, [handleFileUpload]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeAccountId && accounts.length > 0) {
       toast.error("Please select an account first");
+      return;
+    }
+    if (accounts.length === 0) {
+      toast.error("Create an account first from the sidebar");
       return;
     }
     if (form.entryPrice <= 0 || form.exitPrice <= 0) {
       toast.error("Prices must be greater than 0");
       return;
     }
-    addTrade({ ...form, screenshotUrl: screenshot || undefined });
+    setSubmitting(true);
+    await addTrade({ ...form, screenshotUrl: screenshot || undefined });
     toast.success("Trade logged successfully!");
+    setSubmitting(false);
     navigate("/trade-log");
   };
 
@@ -139,7 +154,11 @@ const NewTrade = () => {
           {/* Screenshot */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Chart Screenshot</Label>
-            {screenshot ? (
+            {uploading ? (
+              <div className="flex items-center justify-center h-32 rounded-lg border-2 border-dashed border-primary bg-primary/5">
+                <Loader2 className="h-6 w-6 text-primary animate-spin" />
+              </div>
+            ) : screenshot ? (
               <div className="relative rounded-lg overflow-hidden border border-border">
                 <img src={screenshot} alt="Chart" className="w-full h-48 object-cover" />
                 <button type="button" onClick={() => setScreenshot(null)}
@@ -161,17 +180,14 @@ const NewTrade = () => {
                   input.accept = "image/*";
                   input.onchange = (e) => {
                     const file = (e.target as HTMLInputElement).files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => setScreenshot(ev.target?.result as string);
-                      reader.readAsDataURL(file);
-                    }
+                    if (file) handleFileUpload(file);
                   };
                   input.click();
                 }}
               >
                 <Upload className="h-6 w-6 text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">Drag & drop or click to upload</p>
+                <p className="text-xs text-muted-foreground mt-1">Screenshots saved to cloud</p>
               </div>
             )}
           </div>
@@ -184,8 +200,8 @@ const NewTrade = () => {
               value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
           </div>
 
-          <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-            Log Trade
+          <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+            {submitting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving...</> : "Log Trade"}
           </Button>
         </form>
       </motion.div>

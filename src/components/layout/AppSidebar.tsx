@@ -1,6 +1,8 @@
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, PlusCircle, List, Brain } from "lucide-react";
+import { LayoutDashboard, PlusCircle, List, Brain, LogOut } from "lucide-react";
 import { AccountSelector } from "@/components/AccountSelector";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +24,8 @@ const navItems = [
 ];
 
 export function AppSidebar() {
+  const { user, signOut } = useAuth();
+
   return (
     <Sidebar className="border-r border-border">
       <SidebarHeader className="p-4 border-b border-border">
@@ -31,7 +35,7 @@ export function AppSidebar() {
           </div>
           <div>
             <h1 className="text-sm font-semibold text-foreground font-display tracking-wider">TRADEJOURNAL</h1>
-            <p className="text-xs text-muted-foreground">Performance Tracker</p>
+            <p className="text-xs text-muted-foreground truncate max-w-[140px]">{user?.email}</p>
           </div>
         </div>
         <AccountSelector />
@@ -63,7 +67,10 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-border">
-        <p className="text-xs text-muted-foreground font-display tracking-wider">V1.0 — TRADE SMARTER</p>
+        <Button variant="ghost" size="sm" onClick={signOut} className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground">
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );
