@@ -14,7 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      accounts: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          id: string
+          initial_balance: number
+          name: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          initial_balance?: number
+          name: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          initial_balance?: number
+          name?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      trades: {
+        Row: {
+          account_id: string
+          ai_critique: string | null
+          asset: string
+          created_at: string
+          date: string
+          direction: string
+          entry_price: number
+          exit_price: number
+          id: string
+          mental_state: string
+          notes: string | null
+          pips: number
+          pnl: number
+          position_size: number
+          screenshot_url: string | null
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          ai_critique?: string | null
+          asset: string
+          created_at?: string
+          date?: string
+          direction: string
+          entry_price: number
+          exit_price: number
+          id?: string
+          mental_state?: string
+          notes?: string | null
+          pips?: number
+          pnl?: number
+          position_size?: number
+          screenshot_url?: string | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          ai_critique?: string | null
+          asset?: string
+          created_at?: string
+          date?: string
+          direction?: string
+          entry_price?: number
+          exit_price?: number
+          id?: string
+          mental_state?: string
+          notes?: string | null
+          pips?: number
+          pnl?: number
+          position_size?: number
+          screenshot_url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trades_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
