@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Account, Trade, TradeFormData, calculatePips, calculatePnL } from "@/types/trading";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface TradingContextType {
   accounts: Account[];
@@ -7,117 +10,209 @@ interface TradingContextType {
   activeAccount: Account | null;
   trades: Trade[];
   allTrades: Trade[];
-  addAccount: (account: Omit<Account, "id" | "createdAt">) => void;
+  addAccount: (account: Omit<Account, "id" | "createdAt">) => Promise<void>;
   setActiveAccount: (id: string | null) => void;
-  addTrade: (data: TradeFormData) => void;
-  deleteTrade: (id: string) => void;
+  addTrade: (data: TradeFormData) => Promise<void>;
+  deleteTrade: (id: string) => Promise<void>;
   getTradeById: (id: string) => Trade | undefined;
   updateTradeCritique: (tradeId: string, critique: string) => void;
+  uploadScreenshot: (file: File) => Promise<string | null>;
+  loading: boolean;
 }
 
 const TradingContext = createContext<TradingContextType | null>(null);
 
-const STORAGE_KEY = "trading-journal";
-
-function generateId() {
-  return Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
-}
-
-// Seed data
-const defaultAccounts: Account[] = [
-  { id: "acc-1", name: "Main Live", type: "live", currency: "USD", balance: 10250, initialBalance: 10000, createdAt: "2025-01-01" },
-  { id: "acc-2", name: "Practice", type: "demo", currency: "USD", balance: 50430, initialBalance: 50000, createdAt: "2025-01-01" },
-  { id: "acc-3", name: "FTMO Challenge", type: "funded", currency: "USD", balance: 102800, initialBalance: 100000, createdAt: "2025-02-01" },
-];
-
-const defaultTrades: Trade[] = [
-  { id: "t1", accountId: "acc-1", asset: "EURUSD", entryPrice: 1.0850, exitPrice: 1.0892, direction: "long", positionSize: 1, date: "2025-02-10", pips: 42, pnl: 420, mentalState: "confident", notes: "Clean breakout setup, followed the plan.", createdAt: "2025-02-10" },
-  { id: "t2", accountId: "acc-1", asset: "GBPUSD", entryPrice: 1.2650, exitPrice: 1.2618, direction: "long", positionSize: 0.5, date: "2025-02-12", pips: -32, pnl: -160, mentalState: "anxious", notes: "Entered too early, didn't wait for confirmation.", createdAt: "2025-02-12" },
-  { id: "t3", accountId: "acc-1", asset: "USDJPY", entryPrice: 154.50, exitPrice: 154.20, direction: "short", positionSize: 1, date: "2025-02-14", pips: 30, pnl: 300, mentalState: "confident", notes: "Nice rejection from resistance zone.", createdAt: "2025-02-14" },
-  { id: "t4", accountId: "acc-1", asset: "XAUUSD", entryPrice: 2920.00, exitPrice: 2935.50, direction: "long", positionSize: 0.5, date: "2025-02-15", pips: 155, pnl: 775, mentalState: "confident", notes: "Gold momentum trade.", createdAt: "2025-02-15" },
-  { id: "t5", accountId: "acc-1", asset: "NAS100", entryPrice: 18250, exitPrice: 18190, direction: "long", positionSize: 0.5, date: "2025-02-17", pips: -60, pnl: -300, mentalState: "impulsive", notes: "FOMO entry, should have waited.", createdAt: "2025-02-17" },
-  { id: "t6", accountId: "acc-1", asset: "EURUSD", entryPrice: 1.0910, exitPrice: 1.0945, direction: "long", positionSize: 1.5, date: "2025-02-18", pips: 35, pnl: 525, mentalState: "confident", notes: "Textbook support bounce.", createdAt: "2025-02-18" },
-  { id: "t7", accountId: "acc-2", asset: "GBPJPY", entryPrice: 191.50, exitPrice: 192.10, direction: "long", positionSize: 2, date: "2025-02-13", pips: 60, pnl: 1200, mentalState: "confident", notes: "Demo test - larger size.", createdAt: "2025-02-13" },
-  { id: "t8", accountId: "acc-3", asset: "EURUSD", entryPrice: 1.0880, exitPrice: 1.0910, direction: "long", positionSize: 2, date: "2025-02-16", pips: 30, pnl: 600, mentalState: "confident", notes: "Conservative funded trade.", createdAt: "2025-02-16" },
-];
-
 export function TradingProvider({ children }: { children: React.ReactNode }) {
-  const [accounts, setAccounts] = useState<Account[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return parsed.accounts || defaultAccounts;
-    }
-    return defaultAccounts;
-  });
+  const { user } = useAuth();
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [allTrades, setAllTrades] = useState<Trade[]>([]);
+  const [activeAccountId, setActiveAccountIdState] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [allTrades, setAllTrades] = useState<Trade[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return parsed.trades || defaultTrades;
-    }
-    return defaultTrades;
-  });
-
-  const [activeAccountId, setActiveAccountId] = useState<string | null>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return parsed.activeAccountId || null;
-    }
-    return null;
-  });
-
+  // Fetch accounts and trades when user changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ accounts, trades: allTrades, activeAccountId }));
-  }, [accounts, allTrades, activeAccountId]);
+    if (!user) {
+      setAccounts([]);
+      setAllTrades([]);
+      setActiveAccountIdState(null);
+      setLoading(false);
+      return;
+    }
+    fetchData();
+  }, [user?.id]);
+
+  async function fetchData() {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const [accRes, tradeRes] = await Promise.all([
+        supabase.from("accounts").select("*").order("created_at", { ascending: true }),
+        supabase.from("trades").select("*").order("date", { ascending: true }),
+      ]);
+
+      if (accRes.error) throw accRes.error;
+      if (tradeRes.error) throw tradeRes.error;
+
+      const mappedAccounts: Account[] = (accRes.data || []).map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        type: a.type,
+        currency: a.currency,
+        balance: Number(a.balance),
+        initialBalance: Number(a.initial_balance),
+        createdAt: a.created_at,
+      }));
+
+      const mappedTrades: Trade[] = (tradeRes.data || []).map((t: any) => ({
+        id: t.id,
+        accountId: t.account_id,
+        asset: t.asset,
+        entryPrice: Number(t.entry_price),
+        exitPrice: Number(t.exit_price),
+        direction: t.direction,
+        positionSize: Number(t.position_size),
+        date: t.date,
+        pips: Number(t.pips),
+        pnl: Number(t.pnl),
+        mentalState: t.mental_state,
+        notes: t.notes || "",
+        screenshotUrl: t.screenshot_url || undefined,
+        aiCritique: t.ai_critique || undefined,
+        createdAt: t.created_at,
+      }));
+
+      setAccounts(mappedAccounts);
+      setAllTrades(mappedTrades);
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const activeAccount = accounts.find((a) => a.id === activeAccountId) || null;
   const trades = activeAccountId ? allTrades.filter((t) => t.accountId === activeAccountId) : allTrades;
 
-  const addAccount = useCallback((data: Omit<Account, "id" | "createdAt">) => {
-    const newAccount: Account = { ...data, id: generateId(), createdAt: new Date().toISOString().split("T")[0] };
-    setAccounts((prev) => [...prev, newAccount]);
-  }, []);
+  const addAccount = useCallback(async (data: Omit<Account, "id" | "createdAt">) => {
+    if (!user) return;
+    const { data: inserted, error } = await supabase.from("accounts").insert({
+      user_id: user.id,
+      name: data.name,
+      type: data.type,
+      currency: data.currency,
+      balance: data.balance,
+      initial_balance: data.initialBalance,
+    }).select().single();
+
+    if (error) { toast.error("Failed to create account"); return; }
+
+    setAccounts((prev) => [...prev, {
+      id: inserted.id,
+      name: inserted.name,
+      type: inserted.type as Account["type"],
+      currency: inserted.currency as Account["currency"],
+      balance: Number(inserted.balance),
+      initialBalance: Number(inserted.initial_balance),
+      createdAt: inserted.created_at,
+    }]);
+  }, [user]);
 
   const setActiveAccount = useCallback((id: string | null) => {
-    setActiveAccountId(id);
+    setActiveAccountIdState(id);
   }, []);
 
-  const addTrade = useCallback((data: TradeFormData) => {
+  const addTrade = useCallback(async (data: TradeFormData) => {
+    if (!user) return;
     const accountId = activeAccountId || accounts[0]?.id;
-    if (!accountId) return;
+    if (!accountId) { toast.error("Create an account first"); return; }
+
     const pips = calculatePips(data.entryPrice, data.exitPrice, data.direction, data.asset);
     const pnl = calculatePnL(pips, data.positionSize);
-    const trade: Trade = {
-      ...data,
-      id: generateId(),
-      accountId,
-      pips: Math.round(pips * 10) / 10,
-      pnl: Math.round(pnl * 100) / 100,
-      createdAt: new Date().toISOString(),
-    };
-    setAllTrades((prev) => [...prev, trade]);
-    setAccounts((prev) =>
-      prev.map((a) => (a.id === accountId ? { ...a, balance: Math.round((a.balance + pnl) * 100) / 100 } : a))
-    );
-  }, [activeAccountId, accounts]);
+    const roundedPips = Math.round(pips * 10) / 10;
+    const roundedPnl = Math.round(pnl * 100) / 100;
 
-  const deleteTrade = useCallback((id: string) => {
+    const { data: inserted, error } = await supabase.from("trades").insert({
+      user_id: user.id,
+      account_id: accountId,
+      asset: data.asset,
+      entry_price: data.entryPrice,
+      exit_price: data.exitPrice,
+      direction: data.direction,
+      position_size: data.positionSize,
+      date: data.date,
+      pips: roundedPips,
+      pnl: roundedPnl,
+      mental_state: data.mentalState,
+      notes: data.notes,
+      screenshot_url: data.screenshotUrl || null,
+    }).select().single();
+
+    if (error) { toast.error("Failed to log trade"); console.error(error); return; }
+
+    setAllTrades((prev) => [...prev, {
+      id: inserted.id,
+      accountId: inserted.account_id,
+      asset: inserted.asset,
+      entryPrice: Number(inserted.entry_price),
+      exitPrice: Number(inserted.exit_price),
+      direction: inserted.direction as Trade["direction"],
+      positionSize: Number(inserted.position_size),
+      date: inserted.date,
+      pips: Number(inserted.pips),
+      pnl: Number(inserted.pnl),
+      mentalState: inserted.mental_state as Trade["mentalState"],
+      notes: inserted.notes || "",
+      screenshotUrl: inserted.screenshot_url || undefined,
+      aiCritique: inserted.ai_critique || undefined,
+      createdAt: inserted.created_at,
+    }]);
+
+    // Update account balance
+    const account = accounts.find((a) => a.id === accountId);
+    if (account) {
+      const newBalance = Math.round((account.balance + roundedPnl) * 100) / 100;
+      await supabase.from("accounts").update({ balance: newBalance }).eq("id", accountId);
+      setAccounts((prev) =>
+        prev.map((a) => (a.id === accountId ? { ...a, balance: newBalance } : a))
+      );
+    }
+  }, [user, activeAccountId, accounts]);
+
+  const deleteTrade = useCallback(async (id: string) => {
+    const { error } = await supabase.from("trades").delete().eq("id", id);
+    if (error) { toast.error("Failed to delete trade"); return; }
     setAllTrades((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
   const getTradeById = useCallback((id: string) => allTrades.find((t) => t.id === id), [allTrades]);
 
-  const updateTradeCritique = useCallback((tradeId: string, critique: string) => {
+  const updateTradeCritique = useCallback(async (tradeId: string, critique: string) => {
     setAllTrades((prev) =>
       prev.map((t) => (t.id === tradeId ? { ...t, aiCritique: critique } : t))
     );
+    // Persist to DB (fire and forget)
+    supabase.from("trades").update({ ai_critique: critique }).eq("id", tradeId).then(({ error }) => {
+      if (error) console.error("Failed to save critique:", error);
+    });
   }, []);
 
+  const uploadScreenshot = useCallback(async (file: File): Promise<string | null> => {
+    if (!user) return null;
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("trade-screenshots").upload(path, file);
+    if (error) { toast.error("Upload failed"); console.error(error); return null; }
+    const { data } = supabase.storage.from("trade-screenshots").getPublicUrl(path);
+    return data.publicUrl;
+  }, [user]);
+
   return (
-    <TradingContext.Provider value={{ accounts, activeAccountId, activeAccount, trades, allTrades, addAccount, setActiveAccount, addTrade, deleteTrade, getTradeById, updateTradeCritique }}>
+    <TradingContext.Provider value={{
+      accounts, activeAccountId, activeAccount, trades, allTrades,
+      addAccount, setActiveAccount, addTrade, deleteTrade, getTradeById,
+      updateTradeCritique, uploadScreenshot, loading,
+    }}>
       {children}
     </TradingContext.Provider>
   );
