@@ -11,15 +11,26 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2 className="text-xl font-semibold text-foreground font-display tracking-wide">
-          {activeAccount ? activeAccount.name : "COMMAND CENTER"}
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {activeAccount
-            ? `${activeAccount.type.charAt(0).toUpperCase() + activeAccount.type.slice(1)} Account · ${activeAccount.currency}`
-            : "Aggregated performance across all accounts"}
-        </p>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-end justify-between"
+      >
+        <div>
+          <h2 className="text-xl font-bold text-gradient font-display tracking-[0.15em]">
+            {activeAccount ? activeAccount.name.toUpperCase() : "COMMAND CENTER"}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-1.5 tracking-wider">
+            {activeAccount
+              ? `${activeAccount.type.charAt(0).toUpperCase() + activeAccount.type.slice(1)} Account · ${activeAccount.currency}`
+              : "Aggregated performance across all accounts"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-mono-numbers">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-glow" />
+          REALTIME
+        </div>
       </motion.div>
 
       <StatsCards />

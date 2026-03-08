@@ -1,5 +1,6 @@
 import { useTrading } from "@/contexts/TradingContext";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { motion } from "framer-motion";
 
 export function WinRateChart() {
   const { trades } = useTrading();
@@ -13,38 +14,54 @@ export function WinRateChart() {
     ...(breakeven > 0 ? [{ name: "Breakeven", value: breakeven }] : []),
   ];
 
-  const COLORS = ["hsl(217, 91%, 60%)", "hsl(25, 95%, 53%)", "hsl(215, 12%, 52%)"];
+  const COLORS = ["hsl(165, 80%, 48%)", "hsl(0, 72%, 55%)", "hsl(240, 5%, 45%)"];
   const winRate = trades.length > 0 ? ((wins / trades.length) * 100).toFixed(1) : "0";
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <h3 className="text-sm font-medium text-foreground mb-4">Win Rate</h3>
-      <div className="h-64 flex items-center justify-center relative">
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4, duration: 0.5 }}
+      className="glass-card rounded-xl p-5 relative overflow-hidden"
+    >
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      <h3 className="text-xs font-semibold text-foreground mb-4 uppercase tracking-wider flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-glow" />
+        Win Rate
+      </h3>
+      <div className="h-56 flex items-center justify-center relative">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={data} cx="50%" cy="50%" innerRadius={60} outerRadius={85} dataKey="value" strokeWidth={0}>
+            <Pie data={data} cx="50%" cy="50%" innerRadius={55} outerRadius={80} dataKey="value" strokeWidth={0}>
               {data.map((_, i) => (
                 <Cell key={i} fill={COLORS[i]} />
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{ backgroundColor: "hsl(220, 20%, 10%)", border: "1px solid hsl(220, 16%, 18%)", borderRadius: 8, fontSize: 12 }}
+              contentStyle={{
+                backgroundColor: "hsl(240, 12%, 7%)",
+                border: "1px solid hsl(165, 80%, 48%, 0.2)",
+                borderRadius: 10,
+                fontSize: 11,
+                fontFamily: "JetBrains Mono",
+                boxShadow: "0 0 20px hsl(165, 80%, 48%, 0.1)",
+              }}
             />
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex items-center justify-center flex-col">
-          <span className="text-2xl font-bold font-mono-numbers text-foreground">{winRate}%</span>
-          <span className="text-xs text-muted-foreground">Win Rate</span>
+          <span className="text-3xl font-bold font-mono-numbers text-gradient">{winRate}%</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Win Rate</span>
         </div>
       </div>
-      <div className="flex justify-center gap-4 mt-2">
-        <span className="flex items-center gap-1.5 text-xs">
-          <span className="w-2.5 h-2.5 rounded-full bg-profit" /> {wins} Wins
+      <div className="flex justify-center gap-5 mt-3">
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-profit shadow-[0_0_6px_hsl(var(--profit)/0.5)]" /> {wins} Wins
         </span>
-        <span className="flex items-center gap-1.5 text-xs">
-          <span className="w-2.5 h-2.5 rounded-full bg-loss" /> {losses} Losses
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="w-2 h-2 rounded-full bg-loss shadow-[0_0_6px_hsl(var(--loss)/0.5)]" /> {losses} Losses
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 }
