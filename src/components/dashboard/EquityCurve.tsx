@@ -2,9 +2,12 @@ import { useTrading } from "@/contexts/TradingContext";
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/hooks/useTheme";
 
 export function EquityCurve() {
   const { trades, activeAccount, accounts } = useTrading();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   const data = useMemo(() => {
     const startBalance = activeAccount
@@ -23,6 +26,12 @@ export function EquityCurve() {
     return points;
   }, [trades, activeAccount, accounts]);
 
+  const strokeColor = isDark ? "hsl(165, 80%, 48%)" : "hsl(320, 75%, 48%)";
+  const tickColor = isDark ? "hsl(240, 5%, 45%)" : "hsl(230, 12%, 40%)";
+  const tooltipBg = isDark ? "hsl(240, 12%, 7%)" : "hsl(0, 0%, 100%)";
+  const tooltipBorder = isDark ? "hsl(165, 80%, 48%, 0.2)" : "hsl(240, 10%, 86%)";
+  const tooltipLabel = isDark ? "hsl(180, 10%, 92%)" : "hsl(230, 25%, 12%)";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -40,43 +49,27 @@ export function EquityCurve() {
           <AreaChart data={data}>
             <defs>
               <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(165, 80%, 48%)" stopOpacity={0.25} />
-                <stop offset="50%" stopColor="hsl(165, 80%, 48%)" stopOpacity={0.08} />
-                <stop offset="100%" stopColor="hsl(165, 80%, 48%)" stopOpacity={0} />
+                <stop offset="0%" stopColor={strokeColor} stopOpacity={isDark ? 0.25 : 0.15} />
+                <stop offset="50%" stopColor={strokeColor} stopOpacity={0.05} />
+                <stop offset="100%" stopColor={strokeColor} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis
-              dataKey="date"
-              tick={{ fill: "hsl(240, 5%, 45%)", fontSize: 10, fontFamily: "JetBrains Mono" }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fill: "hsl(240, 5%, 45%)", fontSize: 10, fontFamily: "JetBrains Mono" }}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-            />
+            <XAxis dataKey="date" tick={{ fill: tickColor, fontSize: 10, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: tickColor, fontSize: 10, fontFamily: "JetBrains Mono" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(240, 12%, 7%)",
-                border: "1px solid hsl(165, 80%, 48%, 0.2)",
+                backgroundColor: tooltipBg,
+                border: `1px solid ${tooltipBorder}`,
                 borderRadius: 10,
                 fontSize: 11,
                 fontFamily: "JetBrains Mono",
-                boxShadow: "0 0 20px hsl(165, 80%, 48%, 0.1)",
+                boxShadow: isDark ? `0 0 20px hsl(165, 80%, 48%, 0.1)` : `0 4px 16px hsl(0, 0%, 0%, 0.08)`,
               }}
-              labelStyle={{ color: "hsl(180, 10%, 92%)" }}
+              labelStyle={{ color: tooltipLabel }}
               formatter={(v: number) => [`$${v.toLocaleString()}`, "Equity"]}
             />
-            <Area
-              type="monotone"
-              dataKey="equity"
-              stroke="hsl(165, 80%, 48%)"
-              strokeWidth={2}
-              fill="url(#equityGrad)"
-              dot={false}
-              activeDot={{ r: 4, fill: "hsl(165, 80%, 48%)", stroke: "hsl(240, 15%, 3%)", strokeWidth: 2 }}
+            <Area type="monotone" dataKey="equity" stroke={strokeColor} strokeWidth={2} fill="url(#equityGrad)" dot={false}
+              activeDot={{ r: 4, fill: strokeColor, stroke: isDark ? "hsl(240, 15%, 3%)" : "hsl(0, 0%, 100%)", strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
