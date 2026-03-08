@@ -199,14 +199,15 @@
     background: linear-gradient(135deg, hsl(var(--loss) / 0.15), transparent);
   }
 
-  /* Neon effects (dark mode enhanced, subtle in light) */
+  /* Neon effects — flashy in both modes */
   .neon-border {
     border: 1px solid hsl(var(--primary) / 0.2);
     box-shadow: inset 0 0 20px hsl(var(--primary) / 0.03), 0 0 15px hsl(var(--primary) / 0.05);
   }
 
   .light .neon-border {
-    box-shadow: 0 2px 12px hsl(var(--primary) / 0.08);
+    border: 1px solid hsl(var(--primary) / 0.18);
+    box-shadow: 0 2px 16px hsl(var(--primary) / 0.1), 0 0 0 1px hsl(var(--primary) / 0.06);
   }
 
   .neon-border-intense {
@@ -215,7 +216,8 @@
   }
 
   .light .neon-border-intense {
-    box-shadow: 0 4px 20px hsl(var(--primary) / 0.15);
+    border: 1px solid hsl(var(--primary) / 0.25);
+    box-shadow: 0 4px 24px hsl(var(--primary) / 0.15), 0 0 0 1px hsl(var(--primary) / 0.1);
   }
 
   .glass-card {
@@ -226,9 +228,11 @@
   }
 
   .light .glass-card {
-    background: hsl(0 0% 100% / 0.92);
-    border: 1px solid hsl(var(--border));
-    box-shadow: 0 1px 3px hsl(230 25% 12% / 0.04), 0 4px 16px hsl(230 25% 12% / 0.03);
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.85), hsl(280 60% 98% / 0.7));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--primary) / 0.12);
+    box-shadow: 0 1px 3px hsl(280 60% 30% / 0.04), 0 8px 32px hsl(280 60% 50% / 0.06);
   }
 
   .glass-card-hover {
@@ -246,14 +250,16 @@
   }
 
   .light .glass-card-hover {
-    background: hsl(0 0% 100% / 0.92);
-    border: 1px solid hsl(var(--border));
-    box-shadow: 0 1px 3px hsl(230 25% 12% / 0.04);
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.85), hsl(280 60% 98% / 0.7));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--primary) / 0.1);
+    box-shadow: 0 2px 12px hsl(280 60% 50% / 0.05);
   }
 
   .light .glass-card-hover:hover {
     border-color: hsl(var(--primary) / 0.3);
-    box-shadow: 0 4px 24px hsl(var(--primary) / 0.1);
+    box-shadow: 0 8px 40px hsl(var(--primary) / 0.12), 0 0 0 1px hsl(var(--primary) / 0.08);
   }
 
   /* Scanning line effect (dark only) */
@@ -273,6 +279,17 @@
     animation: scanDown 4s ease-in-out infinite;
   }
 
+  .light .scan-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.25), transparent);
+    animation: scanDown 4s ease-in-out infinite;
+  }
+
   @keyframes scanDown {
     0%, 100% { top: 0; opacity: 0; }
     10% { opacity: 1; }
@@ -288,6 +305,12 @@
     background-size: 60px 60px;
   }
 
+  .light .grid-lines {
+    background-image:
+      linear-gradient(hsl(var(--primary) / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--primary) / 0.06) 1px, transparent 1px);
+  }
+
   /* Gradient text */
   .text-gradient {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--neon-cyan)));
@@ -297,15 +320,37 @@
   }
 
   .light .text-gradient {
-    background: linear-gradient(135deg, hsl(320, 75%, 42%), hsl(270, 55%, 42%));
+    background: linear-gradient(135deg, hsl(280, 85%, 50%), hsl(320, 80%, 50%), hsl(195, 85%, 42%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
+  /* Light mode: vibrant text shadows for profit/loss */
+  .light .text-profit {
+    text-shadow: 0 0 8px hsl(var(--profit) / 0.25);
+  }
+
+  .light .text-loss {
+    text-shadow: 0 0 8px hsl(var(--loss) / 0.25);
+  }
+
+  /* Light mode glow effects */
+  .light .glow-profit {
+    box-shadow: 0 0 20px hsl(var(--profit) / 0.12), inset 0 1px 0 hsl(var(--profit) / 0.12);
+  }
+
+  .light .glow-loss {
+    box-shadow: 0 0 20px hsl(var(--loss) / 0.12), inset 0 1px 0 hsl(var(--loss) / 0.12);
+  }
+
+  .light .glow-primary {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.15), 0 0 80px hsl(var(--primary) / 0.06);
+  }
+
   /* Light mode gradient background */
   .light-gradient-bg {
-    background: linear-gradient(135deg, hsl(330, 80%, 92%), hsl(280, 60%, 92%), hsl(200, 70%, 93%));
+    background: linear-gradient(135deg, hsl(280, 70%, 94%), hsl(320, 65%, 93%), hsl(195, 60%, 94%));
   }
 
   /* Shimmer effect */
@@ -336,5 +381,34 @@
   @keyframes pulseRing {
     0%, 100% { opacity: 0.3; transform: scale(1); }
     50% { opacity: 0.8; transform: scale(1.02); }
+  }
+
+  /* Light mode ambient glow orbs (CSS only) */
+  .light .ambient-glow::before {
+    content: '';
+    position: fixed;
+    top: -20%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, hsl(280, 85%, 75% / 0.12), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    animation: float 8s ease-in-out infinite;
+  }
+
+  .light .ambient-glow::after {
+    content: '';
+    position: fixed;
+    bottom: -15%;
+    left: -5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, hsl(195, 85%, 65% / 0.1), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    animation: float 10s ease-in-out infinite reverse;
   }
 }
