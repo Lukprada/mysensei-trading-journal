@@ -21,6 +21,7 @@ export type Database = {
           currency: string
           id: string
           initial_balance: number
+          myfxbook_account_id: string | null
           name: string
           type: string
           user_id: string
@@ -31,6 +32,7 @@ export type Database = {
           currency?: string
           id?: string
           initial_balance?: number
+          myfxbook_account_id?: string | null
           name: string
           type?: string
           user_id: string
@@ -41,6 +43,7 @@ export type Database = {
           currency?: string
           id?: string
           initial_balance?: number
+          myfxbook_account_id?: string | null
           name?: string
           type?: string
           user_id?: string
@@ -75,6 +78,7 @@ export type Database = {
           direction: string
           entry_price: number
           exit_price: number
+          external_id: string | null
           id: string
           mental_state: string
           notes: string | null
@@ -82,6 +86,7 @@ export type Database = {
           pnl: number
           position_size: number
           screenshot_url: string | null
+          source: string
           user_id: string
         }
         Insert: {
@@ -93,6 +98,7 @@ export type Database = {
           direction: string
           entry_price: number
           exit_price: number
+          external_id?: string | null
           id?: string
           mental_state?: string
           notes?: string | null
@@ -100,6 +106,7 @@ export type Database = {
           pnl?: number
           position_size?: number
           screenshot_url?: string | null
+          source?: string
           user_id: string
         }
         Update: {
@@ -111,6 +118,7 @@ export type Database = {
           direction?: string
           entry_price?: number
           exit_price?: number
+          external_id?: string | null
           id?: string
           mental_state?: string
           notes?: string | null
@@ -118,6 +126,7 @@ export type Database = {
           pnl?: number
           position_size?: number
           screenshot_url?: string | null
+          source?: string
           user_id?: string
         }
         Relationships: [
