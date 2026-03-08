@@ -1,13 +1,15 @@
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { EquityCurve } from "@/components/dashboard/EquityCurve";
 import { WinRateChart } from "@/components/dashboard/WinRateChart";
-import { RecentTrades } from "@/components/dashboard/RecentTrades";
 import { TradeCalendar } from "@/components/dashboard/TradeCalendar";
+import { TradeListPanel } from "@/components/dashboard/TradeListPanel";
 import { useTrading } from "@/contexts/TradingContext";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 const Dashboard = () => {
   const { activeAccount } = useTrading();
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -44,9 +46,9 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
-          <TradeCalendar />
+          <TradeCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
         </div>
-        <RecentTrades />
+        <TradeListPanel selectedDate={selectedDate} onClearDate={() => setSelectedDate(null)} />
       </div>
     </div>
   );
