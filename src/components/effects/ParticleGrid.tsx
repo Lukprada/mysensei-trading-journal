@@ -22,7 +22,6 @@ export function ParticleGrid() {
     resize();
     window.addEventListener("resize", resize);
 
-    // Create particles
     const count = Math.min(80, Math.floor((canvas.width * canvas.height) / 25000));
     for (let i = 0; i < count; i++) {
       particles.push({
@@ -39,27 +38,27 @@ export function ParticleGrid() {
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      const isDark = document.documentElement.classList.contains("dark");
+      const particleColor = isDark ? "165, 80%, 48%" : "320, 72%, 55%";
+
       particles.forEach((p, i) => {
-        // Update
         p.x += p.vx;
         p.y += p.vy;
         p.opacity += (p.targetOpacity - p.opacity) * 0.01;
-
         if (Math.random() < 0.005) p.targetOpacity = Math.random() * 0.5 + 0.1;
 
-        // Wrap
         if (p.x < 0) p.x = canvas.width;
         if (p.x > canvas.width) p.x = 0;
         if (p.y < 0) p.y = canvas.height;
         if (p.y > canvas.height) p.y = 0;
 
-        // Draw particle
+        const alpha = isDark ? p.opacity : p.opacity * 0.5;
+
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(165, 80%, 48%, ${p.opacity})`;
+        ctx.fillStyle = `hsla(${particleColor}, ${alpha})`;
         ctx.fill();
 
-        // Draw connections
         for (let j = i + 1; j < particles.length; j++) {
           const other = particles[j];
           const dx = p.x - other.x;
@@ -69,7 +68,8 @@ export function ParticleGrid() {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(other.x, other.y);
-            ctx.strokeStyle = `hsla(165, 80%, 48%, ${0.06 * (1 - dist / 120)})`;
+            const lineAlpha = isDark ? 0.06 * (1 - dist / 120) : 0.03 * (1 - dist / 120);
+            ctx.strokeStyle = `hsla(${particleColor}, ${lineAlpha})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
