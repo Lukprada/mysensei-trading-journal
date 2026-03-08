@@ -6,7 +6,7 @@ import { GridOverlay } from "@/components/effects/GridOverlay";
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full relative">
+      <div className="min-h-screen flex w-full relative ambient-glow">
         <ParticleGrid />
         <GridOverlay />
         <AppSidebar />

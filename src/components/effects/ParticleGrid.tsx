@@ -39,7 +39,7 @@ export function ParticleGrid() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const isDark = document.documentElement.classList.contains("dark");
-      const particleColor = isDark ? "165, 80%, 48%" : "320, 72%, 55%";
+      const particleColor = isDark ? "165, 80%, 48%" : "280, 85%, 55%";
 
       particles.forEach((p, i) => {
         p.x += p.vx;
