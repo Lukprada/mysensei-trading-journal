@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Brain, LogIn, UserPlus } from "lucide-react";
-import { motion } from "framer-motion";
+import { LogIn, UserPlus, TrendingUp, Shield, Zap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ParticleGrid } from "@/components/effects/ParticleGrid";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -43,54 +44,123 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 grid-lines">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      <ParticleGrid />
+      
+      {/* Ambient glow orbs */}
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-float" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-neon-purple/5 rounded-full blur-[120px] animate-float" style={{ animationDelay: '-3s' }} />
+
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm space-y-8"
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-md space-y-8 relative z-10"
       >
         {/* Branding */}
-        <div className="text-center space-y-3">
-          <div className="h-14 w-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto glow-primary">
-            <Brain className="h-7 w-7 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground font-display tracking-wider">TRADEJOURNAL</h1>
-          <p className="text-sm text-muted-foreground">Track. Analyze. Evolve.</p>
+        <div className="text-center space-y-4">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="relative mx-auto w-20 h-20"
+          >
+            <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl animate-pulse-glow" />
+            <div className="relative h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center neon-border-intense">
+              <TrendingUp className="h-9 w-9 text-primary" />
+            </div>
+          </motion.div>
+          
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+            <h1 className="text-3xl font-bold font-display tracking-[0.2em] text-gradient">
+              TRADEJOURNAL
+            </h1>
+            <p className="text-sm text-muted-foreground mt-2 tracking-wider">
+              TRACK · ANALYZE · EVOLVE
+            </p>
+          </motion.div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="rounded-lg border border-border bg-card p-6 space-y-4 glow-primary">
-            <h2 className="text-lg font-semibold text-foreground">
-              {isLogin ? "Sign In" : "Create Account"}
-            </h2>
+        {/* Feature pills */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex justify-center gap-3"
+        >
+          {[
+            { icon: Shield, text: "Secure" },
+            { icon: Zap, text: "AI-Powered" },
+            { icon: TrendingUp, text: "Real-time" },
+          ].map((item, i) => (
+            <div key={item.text} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card text-xs text-muted-foreground">
+              <item.icon className="h-3 w-3 text-primary" />
+              {item.text}
+            </div>
+          ))}
+        </motion.div>
 
-            {!isLogin && (
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Display Name</Label>
-                <Input
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Your trader alias"
-                  className="bg-secondary border-border"
-                />
-              </div>
-            )}
+        {/* Form */}
+        <motion.form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="glass-card rounded-xl p-6 space-y-5 scan-line">
+            {/* Toggle */}
+            <div className="flex rounded-lg bg-secondary/50 p-1">
+              {["Sign In", "Create Account"].map((label, i) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setIsLogin(i === 0)}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-300 ${
+                    (i === 0 ? isLogin : !isLogin)
+                      ? "bg-primary/15 text-primary border border-primary/20 shadow-[0_0_15px_hsl(var(--primary)/0.1)]"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <AnimatePresence mode="wait">
+              {!isLogin && (
+                <motion.div
+                  key="displayName"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="space-y-1.5 overflow-hidden"
+                >
+                  <Label className="text-xs text-muted-foreground tracking-wider uppercase">Display Name</Label>
+                  <Input
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Your trader alias"
+                    className="bg-secondary/50 border-border/50 focus:border-primary/50 focus:shadow-[0_0_15px_hsl(var(--primary)/0.1)] transition-all"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Email</Label>
+              <Label className="text-xs text-muted-foreground tracking-wider uppercase">Email</Label>
               <Input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="trader@example.com"
-                className="bg-secondary border-border"
+                className="bg-secondary/50 border-border/50 focus:border-primary/50 focus:shadow-[0_0_15px_hsl(var(--primary)/0.1)] transition-all"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Password</Label>
+              <Label className="text-xs text-muted-foreground tracking-wider uppercase">Password</Label>
               <Input
                 type="password"
                 required
@@ -98,26 +168,37 @@ const Auth = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="bg-secondary border-border"
+                className="bg-secondary/50 border-border/50 focus:border-primary/50 focus:shadow-[0_0_15px_hsl(var(--primary)/0.1)] transition-all"
               />
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full gap-2">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold tracking-wider relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               {isLogin ? <LogIn className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-              {loading ? "Loading..." : isLogin ? "Sign In" : "Create Account"}
+              {loading ? "CONNECTING..." : isLogin ? "ENTER TERMINAL" : "INITIALIZE"}
             </Button>
           </div>
-        </form>
+        </motion.form>
 
-        <p className="text-center text-sm text-muted-foreground">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+        {/* Bottom text */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="text-center text-xs text-muted-foreground"
+        >
+          {isLogin ? "No account?" : "Already trading?"}{" "}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-primary hover:underline font-medium"
+            className="text-primary hover:text-primary/80 font-medium transition-colors"
           >
-            {isLogin ? "Sign up" : "Sign in"}
+            {isLogin ? "Create one" : "Sign in"}
           </button>
-        </p>
+        </motion.p>
       </motion.div>
     </div>
   );
