@@ -63,58 +63,58 @@
 
   /* ===== LIGHT THEME (Colorful Gradient) ===== */
   .light {
-    --background: 330 50% 98%;
-    --foreground: 240 20% 15%;
+    --background: 0 0% 98%;
+    --foreground: 230 25% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 20% 15%;
+    --card-foreground: 230 25% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 20% 15%;
+    --popover-foreground: 230 25% 12%;
 
-    --primary: 320 72% 55%;
+    --primary: 320 75% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 330 30% 95%;
-    --secondary-foreground: 240 20% 25%;
+    --secondary: 240 10% 93%;
+    --secondary-foreground: 230 25% 18%;
 
-    --muted: 330 20% 93%;
-    --muted-foreground: 240 10% 50%;
+    --muted: 240 8% 91%;
+    --muted-foreground: 230 12% 40%;
 
-    --accent: 330 30% 92%;
-    --accent-foreground: 240 20% 15%;
+    --accent: 320 30% 93%;
+    --accent-foreground: 230 25% 12%;
 
-    --destructive: 0 72% 55%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 330 20% 88%;
-    --input: 330 20% 88%;
-    --ring: 320 72% 55%;
+    --border: 240 10% 86%;
+    --input: 240 10% 86%;
+    --ring: 320 75% 48%;
 
     --radius: 0.75rem;
 
-    --profit: 155 70% 38%;
-    --loss: 0 72% 55%;
-    --warning: 45 93% 47%;
+    --profit: 152 60% 32%;
+    --loss: 0 68% 48%;
+    --warning: 38 90% 42%;
 
     --surface-1: 0 0% 100%;
-    --surface-2: 330 30% 97%;
-    --surface-3: 330 25% 94%;
+    --surface-2: 240 8% 96%;
+    --surface-3: 240 8% 93%;
 
-    --neon-cyan: 200 80% 50%;
-    --neon-green: 155 70% 38%;
-    --neon-red: 0 72% 55%;
-    --neon-purple: 270 60% 55%;
+    --neon-cyan: 200 75% 42%;
+    --neon-green: 152 60% 32%;
+    --neon-red: 0 68% 48%;
+    --neon-purple: 270 55% 48%;
     --glass: 0 0% 100%;
 
-    --sidebar-background: 330 40% 97%;
-    --sidebar-foreground: 240 20% 15%;
-    --sidebar-primary: 320 72% 55%;
+    --sidebar-background: 0 0% 99%;
+    --sidebar-foreground: 230 25% 12%;
+    --sidebar-primary: 320 75% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 330 30% 94%;
-    --sidebar-accent-foreground: 240 20% 15%;
-    --sidebar-border: 330 20% 90%;
-    --sidebar-ring: 320 72% 55%;
+    --sidebar-accent: 320 20% 94%;
+    --sidebar-accent-foreground: 230 25% 12%;
+    --sidebar-border: 240 10% 88%;
+    --sidebar-ring: 320 75% 48%;
   }
 }
 
