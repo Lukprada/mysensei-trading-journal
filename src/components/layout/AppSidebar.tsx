@@ -1,8 +1,9 @@
 import { NavLink } from "@/components/NavLink";
 import { LayoutDashboard, PlusCircle, List, Brain, LogOut, Activity } from "lucide-react";
 import { AccountSelector } from "@/components/AccountSelector";
+import { CreateAccountDialog } from "@/components/CreateAccountDialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
-import { motion } from "framer-motion";
 import {
   Sidebar,
   SidebarContent,
@@ -42,14 +43,17 @@ export function AppSidebar() {
             </p>
           </div>
         </div>
-        <AccountSelector />
+        <div className="space-y-2">
+          <AccountSelector />
+          <CreateAccountDialog />
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="p-3">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {navItems.map((item, i) => (
+              {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
@@ -69,7 +73,11 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-primary/10">
+      <SidebarFooter className="p-4 border-t border-primary/10 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Theme</span>
+          <ThemeToggle />
+        </div>
         <button
           onClick={signOut}
           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-loss rounded-lg transition-all duration-200 hover:bg-loss/5"
