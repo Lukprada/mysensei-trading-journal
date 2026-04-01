@@ -12,6 +12,9 @@ import TradeLog from "./pages/TradeLog";
 import NewTrade from "./pages/NewTrade";
 import TradeView from "./pages/TradeView";
 import SenseiChat from "./pages/SenseiChat";
+import AnalysisList from "./pages/AnalysisList";
+import AnalysisEditor from "./pages/AnalysisEditor";
+import AnalysisView from "./pages/AnalysisView";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +47,10 @@ function AppRoutes() {
           <Route path="/new-trade" element={<NewTrade />} />
           <Route path="/trade/:id" element={<TradeView />} />
           <Route path="/sensei" element={<SenseiChat />} />
+          <Route path="/analysis" element={<AnalysisList />} />
+          <Route path="/analysis/new" element={<AnalysisEditor />} />
+          <Route path="/analysis/:id" element={<AnalysisView />} />
+          <Route path="/analysis/:id/edit" element={<AnalysisEditor />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AppLayout>

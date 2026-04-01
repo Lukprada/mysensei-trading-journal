@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, PlusCircle, List, Brain, LogOut, Activity } from "lucide-react";
+import { LayoutDashboard, PlusCircle, List, Brain, LogOut, Activity, FileText } from "lucide-react";
 import { AccountSelector } from "@/components/AccountSelector";
 import { CreateAccountDialog } from "@/components/CreateAccountDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -21,6 +21,7 @@ const navItems = [
   { title: "New Trade", url: "/new-trade", icon: PlusCircle },
   { title: "Trade Log", url: "/trade-log", icon: List },
   { title: "Sensei AI", url: "/sensei", icon: Brain },
+  { title: "Analysis", url: "/analysis", icon: FileText },
 ];
 
 export function AppSidebar() {
