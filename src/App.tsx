@@ -12,6 +12,9 @@ import TradeLog from "./pages/TradeLog";
 import NewTrade from "./pages/NewTrade";
 import TradeView from "./pages/TradeView";
 import SenseiChat from "./pages/SenseiChat";
+import AnalysisList from "./pages/AnalysisList";
+import AnalysisEditor from "./pages/AnalysisEditor";
+import AnalysisView from "./pages/AnalysisView";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
