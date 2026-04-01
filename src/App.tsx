@@ -47,6 +47,10 @@ function AppRoutes() {
           <Route path="/new-trade" element={<NewTrade />} />
           <Route path="/trade/:id" element={<TradeView />} />
           <Route path="/sensei" element={<SenseiChat />} />
+          <Route path="/analysis" element={<AnalysisList />} />
+          <Route path="/analysis/new" element={<AnalysisEditor />} />
+          <Route path="/analysis/:id" element={<AnalysisView />} />
+          <Route path="/analysis/:id/edit" element={<AnalysisEditor />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AppLayout>

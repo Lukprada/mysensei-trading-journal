@@ -21,6 +21,7 @@ const navItems = [
   { title: "New Trade", url: "/new-trade", icon: PlusCircle },
   { title: "Trade Log", url: "/trade-log", icon: List },
   { title: "Sensei AI", url: "/sensei", icon: Brain },
+  { title: "Analysis", url: "/analysis", icon: FileText },
 ];
 
 export function AppSidebar() {
