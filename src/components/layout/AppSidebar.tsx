@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, PlusCircle, List, Brain, LogOut, Activity } from "lucide-react";
+import { LayoutDashboard, PlusCircle, List, Brain, LogOut, Activity, FileText } from "lucide-react";
 import { AccountSelector } from "@/components/AccountSelector";
 import { CreateAccountDialog } from "@/components/CreateAccountDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
