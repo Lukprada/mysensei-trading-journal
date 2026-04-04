@@ -15,6 +15,7 @@ import SenseiChat from "./pages/SenseiChat";
 import AnalysisList from "./pages/AnalysisList";
 import AnalysisEditor from "./pages/AnalysisEditor";
 import AnalysisView from "./pages/AnalysisView";
+import PublicAnalysisView from "./pages/PublicAnalysisView";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -65,7 +66,10 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppRoutes />
+          <Routes>
+            <Route path="/shared/analysis/:id" element={<PublicAnalysisView />} />
+            <Route path="/*" element={<AppRoutes />} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
