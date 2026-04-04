@@ -27,6 +27,16 @@ export default function AnalysisView() {
   const { id } = useParams<{ id: string }>();
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    const shareUrl = `${window.location.origin}/shared/analysis/${id}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopied(true);
+      toast.success("Share link copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   useEffect(() => {
     if (!id) return;
