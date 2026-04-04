@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Calendar } from "lucide-react";
+import { ArrowLeft, Edit, Calendar, Share2, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
 import { toast } from "sonner";
