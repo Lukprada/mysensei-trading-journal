@@ -40,6 +40,32 @@ export default function PublicAnalysisView() {
           setNotFound(true);
         } else {
           setAnalysis(data);
+          // Set document meta for social previews (helps when JS is rendered)
+          document.title = `${data.title} | Trading Analysis`;
+          const metaDesc = document.querySelector('meta[name="description"]');
+          const desc = data.content.replace(/[#*_`>\[\]()!]/g, '').substring(0, 160);
+          if (metaDesc) metaDesc.setAttribute('content', desc);
+          else {
+            const meta = document.createElement('meta');
+            meta.name = 'description';
+            meta.content = desc;
+            document.head.appendChild(meta);
+          }
+          // OG tags
+          const setOG = (prop: string, content: string) => {
+            let el = document.querySelector(`meta[property="${prop}"]`);
+            if (!el) { el = document.createElement('meta'); el.setAttribute('property', prop); document.head.appendChild(el); }
+            el.setAttribute('content', content);
+          };
+          setOG('og:title', data.title);
+          setOG('og:description', desc);
+          setOG('og:type', 'article');
+          setOG('og:url', window.location.href);
+          if (data.cover_image_url) setOG('og:image', data.cover_image_url);
+          setOG('twitter:card', data.cover_image_url ? 'summary_large_image' : 'summary');
+          setOG('twitter:title', data.title);
+          setOG('twitter:description', desc);
+          if (data.cover_image_url) setOG('twitter:image', data.cover_image_url);
         }
         setLoading(false);
       });
