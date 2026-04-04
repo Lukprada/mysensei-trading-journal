@@ -5,6 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
+import { ReactionBar } from "@/components/analysis/ReactionBar";
+import { CommentSection } from "@/components/analysis/CommentSection";
+import { SocialShareButtons } from "@/components/analysis/SocialShareButtons";
+import { ViewCounter } from "@/components/analysis/ViewCounter";
 
 interface Analysis {
   id: string;
@@ -58,6 +62,8 @@ export default function PublicAnalysisView() {
     );
   }
 
+  const shareUrl = `${window.location.origin}/shared/analysis/${id}`;
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
@@ -70,11 +76,12 @@ export default function PublicAnalysisView() {
         )}
 
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-3 mb-2 flex-wrap">
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {format(new Date(analysis.created_at), "MMMM d, yyyy")}
             </span>
+            <ViewCounter analysisId={analysis.id} trackView />
           </div>
           <h1 className="text-3xl font-bold font-display text-foreground">{analysis.title}</h1>
           {analysis.tags && analysis.tags.length > 0 && (
@@ -88,6 +95,17 @@ export default function PublicAnalysisView() {
 
         <div className="prose prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-strong:text-primary prose-a:text-primary hover:prose-a:text-primary/80 prose-blockquote:border-primary/30 prose-blockquote:text-muted-foreground prose-code:text-primary prose-img:rounded-lg prose-img:border prose-img:border-border">
           <ReactMarkdown>{analysis.content}</ReactMarkdown>
+        </div>
+
+        {/* Reactions */}
+        <div className="pt-4 border-t border-border space-y-4">
+          <ReactionBar analysisId={analysis.id} />
+          <SocialShareButtons url={shareUrl} title={analysis.title} />
+        </div>
+
+        {/* Comments */}
+        <div className="pt-4 border-t border-border">
+          <CommentSection analysisId={analysis.id} />
         </div>
 
         <div className="text-center pt-8 border-t border-border">
