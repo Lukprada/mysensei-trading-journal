@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Calendar } from "lucide-react";
+import { ArrowLeft, Edit, Calendar, Share2, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -27,6 +27,16 @@ export default function AnalysisView() {
   const { id } = useParams<{ id: string }>();
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    const shareUrl = `${window.location.origin}/shared/analysis/${id}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopied(true);
+      toast.success("Share link copied to clipboard!");
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -65,9 +75,17 @@ export default function AnalysisView() {
           <ArrowLeft className="h-4 w-4" /> Back
         </Button>
         {isOwner && (
-          <Button variant="outline" size="sm" onClick={() => navigate(`/analysis/${id}/edit`)} className="gap-2">
-            <Edit className="h-4 w-4" /> Edit
-          </Button>
+          <div className="flex gap-2">
+            {analysis.published && (
+              <Button variant="outline" size="sm" onClick={handleShare} className="gap-2">
+                {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                {copied ? "Copied!" : "Share"}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={() => navigate(`/analysis/${id}/edit`)} className="gap-2">
+              <Edit className="h-4 w-4" /> Edit
+            </Button>
+          </div>
         )}
       </div>
 
