@@ -89,6 +89,99 @@ export type Database = {
         }
         Relationships: []
       }
+      analysis_comments: {
+        Row: {
+          analysis_id: string
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          analysis_id: string
+          author_name: string
+          content: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          analysis_id?: string
+          author_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_comments_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analysis_reactions: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          emoji: string
+          id: string
+          reactor_name: string | null
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          emoji: string
+          id?: string
+          reactor_name?: string | null
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          reactor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_reactions_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analysis_views: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          id: string
+          viewer_ip: string | null
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          id?: string
+          viewer_ip?: string | null
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          id?: string
+          viewer_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_views_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
