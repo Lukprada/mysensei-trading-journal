@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import {
   Bold, Italic, Heading1, Heading2, Heading3, List, ListOrdered,
-  Link, Image, Quote, Code, Eye, Edit, BarChart3, Upload, Loader2
+  Image, Quote, Code, Eye, Edit, BarChart3, Upload, Loader2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
@@ -100,7 +100,6 @@ export function MarkdownEditor({ content, onChange }: MarkdownEditorProps) {
     { icon: Quote, action: () => insertAtCursor("\n> ", "\n", "quote"), label: "Quote" },
     { icon: Code, action: () => insertAtCursor("\n```\n", "\n```\n", "code"), label: "Code Block" },
     null,
-    { icon: Link, action: () => insertAtCursor("[", "](url)", "link text"), label: "Link" },
     { icon: Upload, action: () => fileInputRef.current?.click(), label: "Upload Image" },
     { icon: BarChart3, action: () => insertAtCursor("\n![Chart](", ")\n", "paste-chart-url"), label: "Chart URL" },
   ];
