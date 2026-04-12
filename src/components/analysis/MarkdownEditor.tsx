@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import {
   Bold, Italic, Heading1, Heading2, Heading3, List, ListOrdered,
-  Link, Image, Quote, Code, Eye, Edit, BarChart3, Upload, Loader2
+  Image, Quote, Code, Eye, Edit, BarChart3, Upload, Loader2
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
