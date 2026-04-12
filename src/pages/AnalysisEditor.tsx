@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { MarkdownEditor } from "@/components/analysis/MarkdownEditor";
+import { ImageUpload } from "@/components/analysis/ImageUpload";
 import { ArrowLeft, Save, Send, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -118,17 +119,10 @@ export default function AnalysisEditor() {
         />
       </div>
 
-      {/* Cover Image URL */}
+      {/* Cover Image */}
       <div className="space-y-2">
-        <Label>Cover Image URL (optional)</Label>
-        <Input
-          value={coverUrl}
-          onChange={(e) => setCoverUrl(e.target.value)}
-          placeholder="Paste a TradingView chart screenshot URL"
-        />
-        {coverUrl && (
-          <img src={coverUrl} alt="Cover" className="w-full max-h-48 object-cover rounded-lg border border-border" />
-        )}
+        <Label>Cover Image (optional)</Label>
+        <ImageUpload value={coverUrl} onChange={setCoverUrl} />
       </div>
 
       {/* Tags */}
