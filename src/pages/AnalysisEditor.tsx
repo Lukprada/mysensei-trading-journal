@@ -123,12 +123,6 @@ export default function AnalysisEditor() {
       <div className="space-y-2">
         <Label>Cover Image (optional)</Label>
         <ImageUpload value={coverUrl} onChange={setCoverUrl} />
-        <Input
-          value={coverUrl}
-          onChange={(e) => setCoverUrl(e.target.value)}
-          placeholder="Or paste an image URL directly"
-          className="text-sm"
-        />
       </div>
 
       {/* Tags */}
