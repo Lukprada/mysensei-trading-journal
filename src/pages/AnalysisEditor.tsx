@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { MarkdownEditor } from "@/components/analysis/MarkdownEditor";
+import { ImageUpload } from "@/components/analysis/ImageUpload";
 import { ArrowLeft, Save, Send, X } from "lucide-react";
 import { toast } from "sonner";
 
