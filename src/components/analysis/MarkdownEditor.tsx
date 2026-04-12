@@ -100,7 +100,6 @@ export function MarkdownEditor({ content, onChange }: MarkdownEditorProps) {
     { icon: Quote, action: () => insertAtCursor("\n> ", "\n", "quote"), label: "Quote" },
     { icon: Code, action: () => insertAtCursor("\n```\n", "\n```\n", "code"), label: "Code Block" },
     null,
-    { icon: Link, action: () => insertAtCursor("[", "](url)", "link text"), label: "Link" },
     { icon: Upload, action: () => fileInputRef.current?.click(), label: "Upload Image" },
     { icon: BarChart3, action: () => insertAtCursor("\n![Chart](", ")\n", "paste-chart-url"), label: "Chart URL" },
   ];
