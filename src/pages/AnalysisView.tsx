@@ -5,7 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit, Calendar, Share2, Check, Clock, ChevronUp } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { ReactionBar } from "@/components/analysis/ReactionBar";
@@ -184,7 +183,7 @@ export default function AnalysisView() {
           prose-li:text-foreground/80
           prose-hr:border-border/50
         ">
-          <ReactMarkdown>{analysis.content}</ReactMarkdown>
+          <div dangerouslySetInnerHTML={{ __html: analysis.content }} />
         </div>
 
         {/* Engagement */}
