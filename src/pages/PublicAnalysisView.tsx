@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, ChevronUp } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+
 import { format } from "date-fns";
 import { ReactionBar } from "@/components/analysis/ReactionBar";
 import { CommentSection } from "@/components/analysis/CommentSection";
@@ -206,7 +206,7 @@ export default function PublicAnalysisView() {
           prose-li:text-foreground/80
           prose-hr:border-border/50
         ">
-          <ReactMarkdown>{analysis.content}</ReactMarkdown>
+          <div dangerouslySetInnerHTML={{ __html: analysis.content }} />
         </div>
 
         {/* Engagement section */}
