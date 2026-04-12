@@ -3,10 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import {
-  Bold, Italic, Heading1, Heading2, Heading3, List, ListOrdered,
-  Image, Quote, Code, Eye, Edit, BarChart3, Upload, Loader2
+  Bold, Italic, Heading1, Heading2, List, ListOrdered,
+  Image, Quote, Eye, Edit, Upload, Loader2, AlignLeft, Link
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,8 +34,13 @@ export function MarkdownEditor({ content, onChange }: MarkdownEditorProps) {
     onChange(newContent);
     setTimeout(() => {
       ta.focus();
-      const newPos = start + before.length + text.length + after.length;
-      ta.setSelectionRange(newPos, newPos);
+      if (!selected && placeholder) {
+        const placeholderStart = start + before.length;
+        ta.setSelectionRange(placeholderStart, placeholderStart + placeholder.length);
+      } else {
+        const newPos = start + before.length + text.length + after.length;
+        ta.setSelectionRange(newPos, newPos);
+      }
     }, 0);
   }, [content, onChange]);
 
@@ -63,7 +67,7 @@ export function MarkdownEditor({ content, onChange }: MarkdownEditorProps) {
       .from("analysis-images")
       .getPublicUrl(path);
 
-    insertAtCursor(`\n![${file.name}](${urlData.publicUrl})\n`);
+    insertAtCursor(`\n<img src="${urlData.publicUrl}" alt="${file.name}" />\n`);
     setUploading(false);
     toast.success("Image inserted!");
   }, [user, insertAtCursor]);
@@ -89,19 +93,20 @@ export function MarkdownEditor({ content, onChange }: MarkdownEditorProps) {
   }, [handleInlineImageUpload]);
 
   const tools = [
-    { icon: Bold, action: () => insertAtCursor("**", "**", "bold"), label: "Bold" },
-    { icon: Italic, action: () => insertAtCursor("*", "*", "italic"), label: "Italic" },
-    { icon: Heading1, action: () => insertAtCursor("\n# ", "\n", "Heading"), label: "H1" },
-    { icon: Heading2, action: () => insertAtCursor("\n## ", "\n", "Heading"), label: "H2" },
-    { icon: Heading3, action: () => insertAtCursor("\n### ", "\n", "Heading"), label: "H3" },
+    { icon: Bold, action: () => insertAtCursor("<b>", "</b>", "bold text"), label: "Bold" },
+    { icon: Italic, action: () => insertAtCursor("<i>", "</i>", "italic text"), label: "Italic" },
     null,
-    { icon: List, action: () => insertAtCursor("\n- ", "\n", "item"), label: "Bullet List" },
-    { icon: ListOrdered, action: () => insertAtCursor("\n1. ", "\n", "item"), label: "Numbered List" },
-    { icon: Quote, action: () => insertAtCursor("\n> ", "\n", "quote"), label: "Quote" },
-    { icon: Code, action: () => insertAtCursor("\n```\n", "\n```\n", "code"), label: "Code Block" },
+    { icon: Heading1, action: () => insertAtCursor("\n<h1>", "</h1>\n", "Heading"), label: "H1" },
+    { icon: Heading2, action: () => insertAtCursor("\n<h2>", "</h2>\n", "Heading"), label: "H2" },
     null,
+    { icon: List, action: () => insertAtCursor("\n<ul>\n  <li>", "</li>\n</ul>\n", "item"), label: "Bullet List" },
+    { icon: ListOrdered, action: () => insertAtCursor("\n<ol>\n  <li>", "</li>\n</ol>\n", "item"), label: "Numbered List" },
+    { icon: Quote, action: () => insertAtCursor("\n<blockquote>", "</blockquote>\n", "quote"), label: "Quote" },
+    { icon: AlignLeft, action: () => insertAtCursor("\n<p>", "</p>\n", "paragraph"), label: "Paragraph" },
+    null,
+    { icon: Link, action: () => insertAtCursor('<a href="', '">link text</a>', "https://"), label: "Link" },
+    { icon: Image, action: () => insertAtCursor('<img src="', '" alt="image" />', "paste-url-here"), label: "Image URL" },
     { icon: Upload, action: () => fileInputRef.current?.click(), label: "Upload Image" },
-    { icon: BarChart3, action: () => insertAtCursor("\n![Chart](", ")\n", "paste-chart-url"), label: "Chart URL" },
   ];
 
   return (
@@ -175,23 +180,22 @@ export function MarkdownEditor({ content, onChange }: MarkdownEditorProps) {
           onChange={(e) => onChange(e.target.value)}
           onPaste={handlePaste}
           onDrop={handleDrop}
-          placeholder="Write your analysis here...
+          placeholder={`Write your analysis using simple HTML...
 
-Tips:
-• Upload images using the toolbar button or paste/drop them directly
-• Use **bold** for emphasis
-• Use ## for section headings
-• Use > for key observations"
+Examples:
+• <b>bold text</b>
+• <i>italic text</i>
+• <h2>Section Title</h2>
+• <img src="https://..." alt="chart" />
+• <a href="https://...">click here</a>
+• <blockquote>key observation</blockquote>`}
           className="min-h-[400px] border-0 rounded-none focus-visible:ring-0 font-mono text-sm resize-y bg-background"
         />
       ) : (
-        <div className="min-h-[400px] p-4 prose prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-strong:text-primary prose-a:text-primary prose-blockquote:border-primary/30 prose-blockquote:text-muted-foreground prose-code:text-primary prose-img:rounded-lg prose-img:border prose-img:border-border">
-          {content ? (
-            <ReactMarkdown>{content}</ReactMarkdown>
-          ) : (
-            <p className="text-muted-foreground italic">Nothing to preview yet...</p>
-          )}
-        </div>
+        <div
+          className="min-h-[400px] p-4 prose prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-strong:text-primary prose-a:text-primary prose-blockquote:border-primary/30 prose-blockquote:text-muted-foreground prose-img:rounded-lg prose-img:border prose-img:border-border [&_img]:max-w-full [&_img]:h-auto"
+          dangerouslySetInnerHTML={{ __html: content || '<p class="text-muted-foreground italic">Nothing to preview yet...</p>' }}
+        />
       )}
     </div>
   );
