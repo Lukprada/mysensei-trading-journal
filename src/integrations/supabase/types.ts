@@ -182,6 +182,39 @@ export type Database = {
           },
         ]
       }
+      myfxbook_credentials: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          last_synced_at: string | null
+          password: string
+          session_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          last_synced_at?: string | null
+          password: string
+          session_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          last_synced_at?: string | null
+          password?: string
+          session_token?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
