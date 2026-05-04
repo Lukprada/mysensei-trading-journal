@@ -16,6 +16,7 @@ import AnalysisList from "./pages/AnalysisList";
 import AnalysisEditor from "./pages/AnalysisEditor";
 import AnalysisView from "./pages/AnalysisView";
 import MyfxbookSync from "./pages/MyfxbookSync";
+import QuantAnalytics from "./pages/QuantAnalytics";
 import PublicAnalysisView from "./pages/PublicAnalysisView";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,7 @@ function AppRoutes() {
           <Route path="/analysis/:id" element={<AnalysisView />} />
           <Route path="/analysis/:id/edit" element={<AnalysisEditor />} />
           <Route path="/myfxbook-sync" element={<MyfxbookSync />} />
+          <Route path="/quant" element={<QuantAnalytics />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AppLayout>

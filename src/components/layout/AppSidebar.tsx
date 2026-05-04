@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, PlusCircle, List, Brain, LogOut, Activity, FileText, RefreshCw } from "lucide-react";
+import { LayoutDashboard, PlusCircle, List, Brain, LogOut, Activity, FileText, RefreshCw, BarChart3 } from "lucide-react";
 import { AccountSelector } from "@/components/AccountSelector";
 import { CreateAccountDialog } from "@/components/CreateAccountDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -20,6 +20,7 @@ const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "New Trade", url: "/new-trade", icon: PlusCircle },
   { title: "Trade Log", url: "/trade-log", icon: List },
+  { title: "Quant Lab", url: "/quant", icon: BarChart3 },
   { title: "Sensei AI", url: "/sensei", icon: Brain },
   { title: "Analysis", url: "/analysis", icon: FileText },
   { title: "Myfxbook Sync", url: "/myfxbook-sync", icon: RefreshCw },
