@@ -151,6 +151,59 @@ export function computeMetrics(trades: Trade[], initialBalance = 10000): QuantMe
     }
   }
 
+  // ===== Module 4 — Plan Adherence (only counts trades with new fields) =====
+  const planned = sorted.filter((t) => t.stopLoss && t.takeProfit && t.entryPrice);
+  const withRisk = sorted.filter((t) => t.riskAmount && t.riskAmount > 0);
+  const withRules = sorted.filter((t) => t.rulesFollowed !== undefined);
+
+  const rMultiples = withRisk.map((t) => t.pnl / (t.riskAmount as number));
+  const rExpectancy = rMultiples.length ? mean(rMultiples) : null;
+
+  const plannedRRs = planned
+    .map((t) => calculatePlannedRR(t.entryPrice, t.stopLoss, t.takeProfit, t.direction))
+    .filter((v): v is number => v !== null);
+  const avgPlannedRR = plannedRRs.length ? mean(plannedRRs) : null;
+
+  const planWinners = withRisk.filter((t) => t.pnl > 0);
+  const hitTargets = planWinners.filter((t) => {
+    const r = t.pnl / (t.riskAmount as number);
+    const planR = calculatePlannedRR(t.entryPrice, t.stopLoss, t.takeProfit, t.direction);
+    return planR !== null && r >= planR * 0.9;
+  });
+  const hitRateVsPlan = planWinners.length
+    ? (hitTargets.length / planWinners.length) * 100
+    : null;
+
+  const disciplineScore = withRules.length
+    ? (withRules.filter((t) => t.rulesFollowed === true).length / withRules.length) * 100
+    : null;
+
+  const minutesBetween = (date: string, exit: string) =>
+    Math.max(0, (new Date(exit).getTime() - new Date(date).getTime()) / 60000);
+  const winsTimed = sorted.filter((t) => t.pnl > 0 && t.exitTime);
+  const lossesTimed = sorted.filter((t) => t.pnl < 0 && t.exitTime);
+  const avgTimeInTradeWinMin = winsTimed.length
+    ? mean(winsTimed.map((t) => minutesBetween(t.date, t.exitTime as string)))
+    : null;
+  const avgTimeInTradeLossMin = lossesTimed.length
+    ? mean(lossesTimed.map((t) => minutesBetween(t.date, t.exitTime as string)))
+    : null;
+
+  // Revenge trade: opened within 60 min after a loss, with above-avg lot size
+  const avgLot = sorted.length ? mean(sorted.map((t) => t.positionSize)) : 0;
+  const sortedByCreated = [...sorted].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+  let revengeTradeCount = 0;
+  for (let i = 1; i < sortedByCreated.length; i++) {
+    const prev = sortedByCreated[i - 1];
+    const cur = sortedByCreated[i];
+    if (prev.pnl < 0 && cur.positionSize > avgLot) {
+      const gapMin = (new Date(cur.createdAt).getTime() - new Date(prev.createdAt).getTime()) / 60000;
+      if (gapMin < 60) revengeTradeCount++;
+    }
+  }
+
   return {
     totalTrades,
     wins: wins.length,
