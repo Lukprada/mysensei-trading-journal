@@ -1,13 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTrading } from "@/contexts/TradingContext";
 import { useNavigate } from "react-router-dom";
-import { COMMON_ASSETS, type TradeFormData, type Direction, type MentalState } from "@/types/trading";
+import { COMMON_ASSETS, SETUP_TAGS, calculatePlannedRR, type TradeFormData, type Direction, type MentalState, type SetupTag } from "@/types/trading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, X, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Upload, X, ArrowUpRight, ArrowDownRight, Loader2, Target, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -24,7 +26,17 @@ const NewTrade = () => {
     date: new Date().toISOString().split("T")[0],
     mentalState: "confident",
     notes: "",
+    stopLoss: undefined,
+    takeProfit: undefined,
+    setupTag: undefined,
+    rulesFollowed: undefined,
+    riskAmount: undefined,
   });
+
+  const plannedRR = useMemo(
+    () => calculatePlannedRR(form.entryPrice, form.stopLoss, form.takeProfit, form.direction),
+    [form.entryPrice, form.stopLoss, form.takeProfit, form.direction]
+  );
 
   const [dragOver, setDragOver] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
