@@ -10,6 +10,8 @@ import { CommentSection } from "@/components/analysis/CommentSection";
 import { SocialShareButtons } from "@/components/analysis/SocialShareButtons";
 import { ViewCounter } from "@/components/analysis/ViewCounter";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Analysis {
   id: string;
@@ -206,7 +208,7 @@ export default function PublicAnalysisView() {
           prose-li:text-foreground/80
           prose-hr:border-border/50
         ">
-          <div dangerouslySetInnerHTML={{ __html: analysis.content }} />
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis.content}</ReactMarkdown>
         </div>
 
         {/* Engagement section */}
