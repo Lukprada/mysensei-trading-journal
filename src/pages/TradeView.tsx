@@ -179,7 +179,43 @@ const TradeView = () => {
             ))}
           </div>
 
-          {trade.screenshotUrl && (
+          {/* Plan & Risk panel — only renders if any of the new fields exist */}
+          {(trade.stopLoss || trade.takeProfit || trade.riskAmount || trade.setupTag || trade.rulesFollowed !== undefined) && (
+            <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+              <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                🎯 Plan & Risk
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                {trade.stopLoss !== undefined && (
+                  <div><span className="text-xs text-muted-foreground block">Stop Loss</span><span className="font-mono-numbers text-loss">{trade.stopLoss}</span></div>
+                )}
+                {trade.takeProfit !== undefined && (
+                  <div><span className="text-xs text-muted-foreground block">Take Profit</span><span className="font-mono-numbers text-profit">{trade.takeProfit}</span></div>
+                )}
+                {trade.riskAmount !== undefined && (
+                  <div><span className="text-xs text-muted-foreground block">Risk</span><span className="font-mono-numbers">${trade.riskAmount}</span></div>
+                )}
+                {trade.riskAmount !== undefined && trade.riskAmount > 0 && (
+                  <div><span className="text-xs text-muted-foreground block">R-Multiple</span>
+                    <span className={`font-mono-numbers ${trade.pnl >= 0 ? "text-profit" : "text-loss"}`}>
+                      {(trade.pnl / trade.riskAmount).toFixed(2)}R
+                    </span>
+                  </div>
+                )}
+                {trade.setupTag && (
+                  <div><span className="text-xs text-muted-foreground block">Setup</span><span>{trade.setupTag}</span></div>
+                )}
+                {trade.rulesFollowed !== undefined && (
+                  <div><span className="text-xs text-muted-foreground block">Rules</span>
+                    <span className={trade.rulesFollowed ? "text-profit" : "text-loss"}>
+                      {trade.rulesFollowed ? "✓ Followed" : "✗ Broke plan"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
             <div className="rounded-lg border border-border overflow-hidden">
               <img src={trade.screenshotUrl} alt="Trade chart" className="w-full object-cover max-h-80" />
             </div>
