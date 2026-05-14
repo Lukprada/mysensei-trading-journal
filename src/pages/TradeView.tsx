@@ -215,7 +215,7 @@ const TradeView = () => {
               </div>
             </div>
           )}
-
+          {trade.screenshotUrl && (
             <div className="rounded-lg border border-border overflow-hidden">
               <img src={trade.screenshotUrl} alt="Trade chart" className="w-full object-cover max-h-80" />
             </div>
