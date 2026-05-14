@@ -208,6 +208,9 @@ Deno.serve(async (req) => {
             notes: trade.comment || "",
             source: "myfxbook",
             external_id: externalId,
+            stop_loss: trade.sl && trade.sl > 0 ? trade.sl : null,
+            take_profit: trade.tp && trade.tp > 0 ? trade.tp : null,
+            exit_time: trade.closeTime ? new Date(trade.closeTime).toISOString() : null,
           });
 
         if (insertError) {
