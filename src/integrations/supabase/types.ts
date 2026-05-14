@@ -243,6 +243,7 @@ export type Database = {
           direction: string
           entry_price: number
           exit_price: number
+          exit_time: string | null
           external_id: string | null
           id: string
           mental_state: string
@@ -250,8 +251,13 @@ export type Database = {
           pips: number
           pnl: number
           position_size: number
+          risk_amount: number | null
+          rules_followed: boolean | null
           screenshot_url: string | null
+          setup_tag: string | null
           source: string
+          stop_loss: number | null
+          take_profit: number | null
           user_id: string
         }
         Insert: {
@@ -263,6 +269,7 @@ export type Database = {
           direction: string
           entry_price: number
           exit_price: number
+          exit_time?: string | null
           external_id?: string | null
           id?: string
           mental_state?: string
@@ -270,8 +277,13 @@ export type Database = {
           pips?: number
           pnl?: number
           position_size?: number
+          risk_amount?: number | null
+          rules_followed?: boolean | null
           screenshot_url?: string | null
+          setup_tag?: string | null
           source?: string
+          stop_loss?: number | null
+          take_profit?: number | null
           user_id: string
         }
         Update: {
@@ -283,6 +295,7 @@ export type Database = {
           direction?: string
           entry_price?: number
           exit_price?: number
+          exit_time?: string | null
           external_id?: string | null
           id?: string
           mental_state?: string
@@ -290,8 +303,13 @@ export type Database = {
           pips?: number
           pnl?: number
           position_size?: number
+          risk_amount?: number | null
+          rules_followed?: boolean | null
           screenshot_url?: string | null
+          setup_tag?: string | null
           source?: string
+          stop_loss?: number | null
+          take_profit?: number | null
           user_id?: string
         }
         Relationships: [
