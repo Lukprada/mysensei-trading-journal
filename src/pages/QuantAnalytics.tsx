@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp, TrendingDown, Target, Activity, Zap, Shield,
   BarChart3, Flame, Snowflake, Award, AlertTriangle, Gauge,
+  Brain, Clock, AlertCircle, CheckCircle2,
 } from "lucide-react";
 
 interface PillarProps {
@@ -276,18 +277,92 @@ export default function QuantAnalytics() {
         </div>
       </section>
 
-      {/* Coming Soon */}
+      {/* Module 4 — Plan Adherence (R-multiples, discipline, etc.) */}
+      <section>
+        <h2 className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-4 font-display">
+          🧠 Module 4 — Plan Adherence & Behavior
+        </h2>
+        {m.tradesWithPlan === 0 && m.tradesWithRisk === 0 && m.disciplineScore === null ? (
+          <Card className="p-5 bg-card/30 border-dashed border-primary/20">
+            <p className="text-xs text-muted-foreground">
+              Add Stop Loss, Take Profit, Risk $, and "rules followed" on new trades to unlock
+              R-Expectancy, Avg Planned R:R, Hit-Rate vs Plan, Discipline Score, and Time-in-Trade.
+            </p>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <Pillar
+              title="R-Expectancy"
+              value={m.rExpectancy === null ? "—" : `${fmt(m.rExpectancy, 2)}R`}
+              hint={m.rExpectancy === null ? "Need Risk $" : `${m.tradesWithRisk} trades`}
+              icon={Gauge}
+              tone={(m.rExpectancy ?? 0) > 0 ? "positive" : "negative"}
+              formula="avg(pnl / risk_amount)"
+            />
+            <Pillar
+              title="Avg Planned R:R"
+              value={m.avgPlannedRR === null ? "—" : `1 : ${fmt(m.avgPlannedRR, 2)}`}
+              hint={m.avgPlannedRR === null ? "Need SL/TP" : `${m.tradesWithPlan} planned`}
+              icon={Target}
+              tone={(m.avgPlannedRR ?? 0) >= 2 ? "positive" : "warning"}
+            />
+            <Pillar
+              title="Hit-Rate vs Plan"
+              value={m.hitRateVsPlan === null ? "—" : `${fmt(m.hitRateVsPlan, 1)}%`}
+              hint="Winners that hit ≥90% of TP"
+              icon={CheckCircle2}
+              tone={(m.hitRateVsPlan ?? 0) >= 60 ? "positive" : "warning"}
+            />
+            <Pillar
+              title="Discipline Score"
+              value={m.disciplineScore === null ? "—" : `${fmt(m.disciplineScore, 0)}%`}
+              hint="Trades that followed rules"
+              icon={Shield}
+              tone={(m.disciplineScore ?? 0) >= 80 ? "positive" : (m.disciplineScore ?? 0) >= 50 ? "warning" : "negative"}
+            />
+            <Pillar
+              title="Avg Time (Wins)"
+              value={m.avgTimeInTradeWinMin === null ? "—" : `${fmt(m.avgTimeInTradeWinMin, 0)}m`}
+              hint="Minutes in winning trades"
+              icon={Clock}
+              tone="positive"
+            />
+            <Pillar
+              title="Avg Time (Losses)"
+              value={m.avgTimeInTradeLossMin === null ? "—" : `${fmt(m.avgTimeInTradeLossMin, 0)}m`}
+              hint="Cut losses faster?"
+              icon={Clock}
+              tone="negative"
+            />
+            <Pillar
+              title="Revenge Trades"
+              value={`${m.revengeTradeCount}`}
+              hint="Big lot <60min after a loss"
+              icon={AlertCircle}
+              tone={m.revengeTradeCount === 0 ? "positive" : "negative"}
+            />
+            <Pillar
+              title="Coverage"
+              value={`${m.tradesWithPlan}/${m.totalTrades}`}
+              hint="Trades with SL+TP logged"
+              icon={Brain}
+              tone="neutral"
+            />
+          </div>
+        )}
+      </section>
+
+      {/* Still blocked */}
       <Card className="p-5 bg-card/30 border-dashed border-primary/20">
         <div className="flex items-start gap-3">
           <Zap className="h-4 w-4 text-primary mt-0.5" />
           <div className="space-y-1">
             <p className="text-xs font-display uppercase tracking-wider text-primary">
-              Pillars Requiring More Data (coming next)
+              Still Locked (need paid price-data API)
             </p>
             <p className="text-xs text-muted-foreground">
-              MAE/MFE, Hurst Exponent, R-multiples, time-of-day edge, asset correlation,
-              Probability of Ruin — these require intraday tick data or per-trade SL/TP fields
-              we'll add in a future migration.
+              MAE/MFE (true intraday excursion), Hurst Exponent, ATR-normalized returns,
+              Slippage, Spread Cost — these all require 1-minute historical price data per trade.
             </p>
           </div>
         </div>
