@@ -185,7 +185,7 @@ export default function AnalysisView() {
           prose-li:text-foreground/80
           prose-hr:border-border/50
         ">
-          <div dangerouslySetInnerHTML={{ __html: analysis.content }} />
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis.content}</ReactMarkdown>
         </div>
 
         {/* Engagement */}
