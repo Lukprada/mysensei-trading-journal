@@ -1,4 +1,4 @@
-import { Trade } from "@/types/trading";
+import { Trade, calculatePlannedRR } from "@/types/trading";
 
 export interface QuantMetrics {
   totalTrades: number;
@@ -19,7 +19,7 @@ export interface QuantMetrics {
   payoffRatio: number;
   maxConsecutiveWins: number;
   maxConsecutiveLosses: number;
-  currentStreak: number; // positive = wins, negative = losses
+  currentStreak: number;
   zScore: number;
   stdDev: number;
   sharpeRatio: number;
@@ -30,6 +30,15 @@ export interface QuantMetrics {
   recoveryFactor: number;
   kellyPercent: number;
   cagr: number | null;
+  rExpectancy: number | null;
+  avgPlannedRR: number | null;
+  hitRateVsPlan: number | null;
+  disciplineScore: number | null;
+  avgTimeInTradeWinMin: number | null;
+  avgTimeInTradeLossMin: number | null;
+  revengeTradeCount: number;
+  tradesWithPlan: number;
+  tradesWithRisk: number;
 }
 
 const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
