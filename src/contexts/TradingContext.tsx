@@ -79,6 +79,12 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
         screenshotUrl: t.screenshot_url || undefined,
         aiCritique: t.ai_critique || undefined,
         createdAt: t.created_at,
+        stopLoss: t.stop_loss != null ? Number(t.stop_loss) : undefined,
+        takeProfit: t.take_profit != null ? Number(t.take_profit) : undefined,
+        exitTime: t.exit_time || undefined,
+        setupTag: t.setup_tag || undefined,
+        rulesFollowed: t.rules_followed ?? undefined,
+        riskAmount: t.risk_amount != null ? Number(t.risk_amount) : undefined,
       }));
 
       setAccounts(mappedAccounts);
@@ -146,6 +152,12 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       mental_state: data.mentalState,
       notes: data.notes,
       screenshot_url: data.screenshotUrl || null,
+      stop_loss: data.stopLoss ?? null,
+      take_profit: data.takeProfit ?? null,
+      exit_time: data.exitTime ?? null,
+      setup_tag: data.setupTag ?? null,
+      rules_followed: data.rulesFollowed ?? null,
+      risk_amount: data.riskAmount ?? null,
     }).select().single();
 
     if (error) { toast.error("Failed to log trade"); console.error(error); return; }
@@ -166,6 +178,12 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       screenshotUrl: inserted.screenshot_url || undefined,
       aiCritique: inserted.ai_critique || undefined,
       createdAt: inserted.created_at,
+      stopLoss: inserted.stop_loss != null ? Number(inserted.stop_loss) : undefined,
+      takeProfit: inserted.take_profit != null ? Number(inserted.take_profit) : undefined,
+      exitTime: inserted.exit_time || undefined,
+      setupTag: inserted.setup_tag || undefined,
+      rulesFollowed: inserted.rules_followed ?? undefined,
+      riskAmount: inserted.risk_amount != null ? Number(inserted.risk_amount) : undefined,
     }]);
 
     // Update account balance
