@@ -1,13 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTrading } from "@/contexts/TradingContext";
 import { useNavigate } from "react-router-dom";
-import { COMMON_ASSETS, type TradeFormData, type Direction, type MentalState } from "@/types/trading";
+import { COMMON_ASSETS, SETUP_TAGS, calculatePlannedRR, type TradeFormData, type Direction, type MentalState, type SetupTag } from "@/types/trading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, X, ArrowUpRight, ArrowDownRight, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Upload, X, ArrowUpRight, ArrowDownRight, Loader2, Target, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -24,7 +26,17 @@ const NewTrade = () => {
     date: new Date().toISOString().split("T")[0],
     mentalState: "confident",
     notes: "",
+    stopLoss: undefined,
+    takeProfit: undefined,
+    setupTag: undefined,
+    rulesFollowed: undefined,
+    riskAmount: undefined,
   });
+
+  const plannedRR = useMemo(
+    () => calculatePlannedRR(form.entryPrice, form.stopLoss, form.takeProfit, form.direction),
+    [form.entryPrice, form.stopLoss, form.takeProfit, form.direction]
+  );
 
   const [dragOver, setDragOver] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
@@ -151,7 +163,62 @@ const NewTrade = () => {
             </div>
           </div>
 
-          {/* Screenshot */}
+          {/* Plan & Risk */}
+          <div className="rounded-lg border border-border bg-secondary/30 p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Plan & Risk</h3>
+              {plannedRR !== null && (
+                <Badge variant="outline" className="ml-auto font-mono-numbers">
+                  <Target className="h-3 w-3 mr-1" /> R:R 1 : {plannedRR.toFixed(2)}
+                </Badge>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Stop Loss</Label>
+                <Input type="number" step="any" className="bg-background border-border font-mono-numbers"
+                  placeholder="Price"
+                  value={form.stopLoss ?? ""} onChange={(e) => setForm((f) => ({ ...f, stopLoss: e.target.value ? parseFloat(e.target.value) : undefined }))} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Take Profit</Label>
+                <Input type="number" step="any" className="bg-background border-border font-mono-numbers"
+                  placeholder="Price"
+                  value={form.takeProfit ?? ""} onChange={(e) => setForm((f) => ({ ...f, takeProfit: e.target.value ? parseFloat(e.target.value) : undefined }))} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Risk ($)</Label>
+                <Input type="number" step="any" min="0" className="bg-background border-border font-mono-numbers"
+                  placeholder="e.g. 50"
+                  value={form.riskAmount ?? ""} onChange={(e) => setForm((f) => ({ ...f, riskAmount: e.target.value ? parseFloat(e.target.value) : undefined }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Setup Tag</Label>
+                <Select value={form.setupTag ?? ""} onValueChange={(v) => setForm((f) => ({ ...f, setupTag: v as SetupTag }))}>
+                  <SelectTrigger className="bg-background border-border"><SelectValue placeholder="Select setup" /></SelectTrigger>
+                  <SelectContent>
+                    {SETUP_TAGS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Followed your rules?</Label>
+                <div className="flex items-center gap-3 h-10 px-3 rounded-md border border-border bg-background">
+                  <Switch
+                    checked={form.rulesFollowed === true}
+                    onCheckedChange={(v) => setForm((f) => ({ ...f, rulesFollowed: v }))}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {form.rulesFollowed === true ? "Yes — disciplined" : form.rulesFollowed === false ? "No — broke plan" : "Not set"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Chart Screenshot</Label>
             {uploading ? (

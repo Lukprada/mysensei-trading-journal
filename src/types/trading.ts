@@ -2,6 +2,9 @@ export type AccountType = "live" | "demo" | "funded";
 export type Currency = "USD" | "GBP" | "EUR";
 export type Direction = "long" | "short";
 export type MentalState = "confident" | "anxious" | "impulsive";
+export type SetupTag = "FVG" | "OB" | "BOS" | "Sweep" | "Breakout" | "Reversal" | "Other";
+
+export const SETUP_TAGS: SetupTag[] = ["FVG", "OB", "BOS", "Sweep", "Breakout", "Reversal", "Other"];
 
 export interface Account {
   id: string;
@@ -29,6 +32,13 @@ export interface Trade {
   screenshotUrl?: string;
   aiCritique?: string;
   createdAt: string;
+  // New journaling fields
+  stopLoss?: number;
+  takeProfit?: number;
+  exitTime?: string;
+  setupTag?: SetupTag;
+  rulesFollowed?: boolean;
+  riskAmount?: number;
 }
 
 export interface TradeFormData {
@@ -41,6 +51,12 @@ export interface TradeFormData {
   mentalState: MentalState;
   notes: string;
   screenshotUrl?: string;
+  stopLoss?: number;
+  takeProfit?: number;
+  exitTime?: string;
+  setupTag?: SetupTag;
+  rulesFollowed?: boolean;
+  riskAmount?: number;
 }
 
 export function calculatePips(entry: number, exit: number, direction: Direction, asset: string): number {
@@ -52,6 +68,26 @@ export function calculatePips(entry: number, exit: number, direction: Direction,
 
 export function calculatePnL(pips: number, positionSize: number): number {
   return pips * positionSize * 10; // simplified: 1 pip = $10 per lot
+}
+
+/** Planned R:R ratio from entry, SL, TP. Returns null if SL/TP missing or invalid. */
+export function calculatePlannedRR(
+  entry: number,
+  sl: number | undefined,
+  tp: number | undefined,
+  direction: Direction
+): number | null {
+  if (!sl || !tp || !entry) return null;
+  const risk = direction === "long" ? entry - sl : sl - entry;
+  const reward = direction === "long" ? tp - entry : entry - tp;
+  if (risk <= 0 || reward <= 0) return null;
+  return reward / risk;
+}
+
+/** Realized R-multiple = pnl / risk_amount */
+export function calculateRMultiple(pnl: number, riskAmount: number | undefined): number | null {
+  if (!riskAmount || riskAmount <= 0) return null;
+  return pnl / riskAmount;
 }
 
 export const COMMON_ASSETS = [
