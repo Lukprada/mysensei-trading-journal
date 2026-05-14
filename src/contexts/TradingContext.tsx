@@ -82,7 +82,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
         stopLoss: t.stop_loss != null ? Number(t.stop_loss) : undefined,
         takeProfit: t.take_profit != null ? Number(t.take_profit) : undefined,
         exitTime: t.exit_time || undefined,
-        setupTag: t.setup_tag || undefined,
+        setupTag: (t.setup_tag as Trade["setupTag"]) || undefined,
         rulesFollowed: t.rules_followed ?? undefined,
         riskAmount: t.risk_amount != null ? Number(t.risk_amount) : undefined,
       }));
@@ -181,7 +181,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       stopLoss: inserted.stop_loss != null ? Number(inserted.stop_loss) : undefined,
       takeProfit: inserted.take_profit != null ? Number(inserted.take_profit) : undefined,
       exitTime: inserted.exit_time || undefined,
-      setupTag: inserted.setup_tag || undefined,
+      setupTag: (inserted.setup_tag as Trade["setupTag"]) || undefined,
       rulesFollowed: inserted.rules_followed ?? undefined,
       riskAmount: inserted.risk_amount != null ? Number(inserted.risk_amount) : undefined,
     }]);
