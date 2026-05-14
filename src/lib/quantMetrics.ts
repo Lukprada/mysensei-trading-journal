@@ -234,6 +234,15 @@ export function computeMetrics(trades: Trade[], initialBalance = 10000): QuantMe
     recoveryFactor,
     kellyPercent,
     cagr,
+    rExpectancy,
+    avgPlannedRR,
+    hitRateVsPlan,
+    disciplineScore,
+    avgTimeInTradeWinMin,
+    avgTimeInTradeLossMin,
+    revengeTradeCount,
+    tradesWithPlan: planned.length,
+    tradesWithRisk: withRisk.length,
   };
 }
 
