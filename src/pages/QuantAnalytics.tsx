@@ -22,7 +22,6 @@ interface PillarProps {
   icon: React.ElementType;
   tone?: "positive" | "negative" | "neutral" | "warning";
   formula?: string;
-  onClick?: () => void;
 }
 
 function Pillar({ title, value, hint, icon: Icon, tone = "neutral", formula }: PillarProps) {
