@@ -25,7 +25,9 @@ interface PillarProps {
   onClick?: () => void;
 }
 
-function Pillar({ title, value, hint, icon: Icon, tone = "neutral", formula, onClick }: PillarProps) {
+function Pillar({ title, value, hint, icon: Icon, tone = "neutral", formula }: PillarProps) {
+  const openExplainer = useContext(ExplainerContext);
+  const hasExplainer = !!METRIC_EXPLAINERS[title];
   const toneClass =
     tone === "positive" ? "text-profit border-profit/30"
     : tone === "negative" ? "text-loss border-loss/30"
