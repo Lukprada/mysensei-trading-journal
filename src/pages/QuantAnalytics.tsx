@@ -1,12 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState, createContext, useContext } from "react";
+
+const ExplainerContext = createContext<(title: string) => void>(() => {});
 import { useTrading } from "@/contexts/TradingContext";
 import { computeMetrics, interpretZScore, interpretKelly } from "@/lib/quantMetrics";
+import { METRIC_EXPLAINERS } from "@/lib/metricExplainers";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import {
   TrendingUp, TrendingDown, Target, Activity, Zap, Shield,
   BarChart3, Flame, Snowflake, Award, AlertTriangle, Gauge,
-  Brain, Clock, AlertCircle, CheckCircle2,
+  Brain, Clock, AlertCircle, CheckCircle2, Info, BookOpen, Lightbulb, Sparkles,
 } from "lucide-react";
 
 interface PillarProps {
@@ -19,6 +25,8 @@ interface PillarProps {
 }
 
 function Pillar({ title, value, hint, icon: Icon, tone = "neutral", formula }: PillarProps) {
+  const openExplainer = useContext(ExplainerContext);
+  const hasExplainer = !!METRIC_EXPLAINERS[title];
   const toneClass =
     tone === "positive" ? "text-profit border-profit/30"
     : tone === "negative" ? "text-loss border-loss/30"
@@ -26,27 +34,121 @@ function Pillar({ title, value, hint, icon: Icon, tone = "neutral", formula }: P
     : "text-primary border-primary/20";
 
   return (
-    <Card className={`p-5 bg-card/50 backdrop-blur border ${toneClass} transition-all hover:scale-[1.02]`}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4" />
-          <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-display">
-            {title}
-          </span>
+    <button
+      type="button"
+      onClick={() => hasExplainer && openExplainer(title)}
+      disabled={!hasExplainer}
+      className="text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-lg disabled:cursor-default"
+    >
+      <Card className={`p-5 bg-card/50 backdrop-blur border ${toneClass} transition-all hover:scale-[1.02] group-hover:shadow-[0_0_30px_-10px_hsl(var(--primary)/0.4)] cursor-pointer relative`}>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Icon className="h-4 w-4" />
+            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-display">
+              {title}
+            </span>
+          </div>
+          <Info className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary transition-colors" />
         </div>
-      </div>
-      <div className="text-2xl font-bold font-mono-numbers mb-1">{value}</div>
-      {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
-      {formula && (
-        <div className="text-[10px] text-muted-foreground/60 mt-2 font-mono">{formula}</div>
-      )}
-    </Card>
+        <div className="text-2xl font-bold font-mono-numbers mb-1">{value}</div>
+        {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
+        {formula && (
+          <div className="text-[10px] text-muted-foreground/60 mt-2 font-mono">{formula}</div>
+        )}
+      </Card>
+    </button>
+  );
+}
+
+function ExplainerDialog({
+  metricKey, open, onOpenChange,
+}: { metricKey: string | null; open: boolean; onOpenChange: (o: boolean) => void }) {
+  const data = metricKey ? METRIC_EXPLAINERS[metricKey] : null;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-card/95 backdrop-blur border-primary/30">
+        {data ? (
+          <>
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">
+                  QUANT PILLAR
+                </Badge>
+              </div>
+              <DialogTitle className="text-2xl font-display tracking-[0.05em] text-gradient">
+                {data.title}
+              </DialogTitle>
+              <DialogDescription className="font-mono text-sm text-primary/80 pt-2">
+                {data.formula}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-5 mt-2">
+              <section>
+                <div className="flex items-center gap-2 mb-2">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  <h3 className="text-xs uppercase tracking-[0.2em] font-display text-muted-foreground">
+                    Short History
+                  </h3>
+                </div>
+                <p className="text-sm leading-relaxed text-foreground/90">{data.history}</p>
+              </section>
+
+              <section>
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <h3 className="text-xs uppercase tracking-[0.2em] font-display text-muted-foreground">
+                    Why It Matters
+                  </h3>
+                </div>
+                <p className="text-sm leading-relaxed text-foreground/90">{data.importance}</p>
+              </section>
+
+              <section>
+                <div className="flex items-center gap-2 mb-2">
+                  <Lightbulb className="h-4 w-4 text-yellow-400" />
+                  <h3 className="text-xs uppercase tracking-[0.2em] font-display text-muted-foreground">
+                    How to Improve It
+                  </h3>
+                </div>
+                <ul className="space-y-2">
+                  {data.improve.map((tip, i) => (
+                    <li key={i} className="flex gap-2 text-sm leading-relaxed text-foreground/90">
+                      <span className="text-primary mt-1">▸</span>
+                      <span>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              {data.benchmark && (
+                <section className="border-t border-primary/10 pt-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="h-4 w-4 text-profit" />
+                    <h3 className="text-xs uppercase tracking-[0.2em] font-display text-muted-foreground">
+                      Benchmark
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-profit/90 font-mono">{data.benchmark}</p>
+                </section>
+              )}
+            </div>
+          </>
+        ) : (
+          <DialogHeader>
+            <DialogTitle>No explainer available</DialogTitle>
+            <DialogDescription>This metric doesn't have a write-up yet.</DialogDescription>
+          </DialogHeader>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
 export default function QuantAnalytics() {
   const { trades, activeAccount } = useTrading();
   const initBalance = activeAccount?.initialBalance || 10000;
+  const [explainerKey, setExplainerKey] = useState<string | null>(null);
 
   const m = useMemo(() => computeMetrics(trades, initBalance), [trades, initBalance]);
 
@@ -67,7 +169,13 @@ export default function QuantAnalytics() {
   const money = (n: number) => `${n >= 0 ? "+" : "-"}$${fmt(Math.abs(n))}`;
 
   return (
+    <ExplainerContext.Provider value={setExplainerKey}>
     <div className="space-y-8 pb-12">
+      <ExplainerDialog
+        metricKey={explainerKey}
+        open={!!explainerKey}
+        onOpenChange={(o) => !o && setExplainerKey(null)}
+      />
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-2">
@@ -368,5 +476,6 @@ export default function QuantAnalytics() {
         </div>
       </Card>
     </div>
+    </ExplainerContext.Provider>
   );
 }
