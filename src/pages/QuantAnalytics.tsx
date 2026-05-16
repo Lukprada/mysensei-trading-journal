@@ -148,6 +148,7 @@ function ExplainerDialog({
 export default function QuantAnalytics() {
   const { trades, activeAccount } = useTrading();
   const initBalance = activeAccount?.initialBalance || 10000;
+  const [explainerKey, setExplainerKey] = useState<string | null>(null);
 
   const m = useMemo(() => computeMetrics(trades, initBalance), [trades, initBalance]);
 
@@ -168,7 +169,13 @@ export default function QuantAnalytics() {
   const money = (n: number) => `${n >= 0 ? "+" : "-"}$${fmt(Math.abs(n))}`;
 
   return (
+    <ExplainerContext.Provider value={setExplainerKey}>
     <div className="space-y-8 pb-12">
+      <ExplainerDialog
+        metricKey={explainerKey}
+        open={!!explainerKey}
+        onOpenChange={(o) => !o && setExplainerKey(null)}
+      />
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-2">
