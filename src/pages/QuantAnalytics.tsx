@@ -476,5 +476,6 @@ export default function QuantAnalytics() {
         </div>
       </Card>
     </div>
+    </ExplainerContext.Provider>
   );
 }
