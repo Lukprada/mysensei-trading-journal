@@ -36,8 +36,9 @@ function Pillar({ title, value, hint, icon: Icon, tone = "neutral", formula }: P
   return (
     <button
       type="button"
-      onClick={onClick}
-      className="text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-lg"
+      onClick={() => hasExplainer && openExplainer(title)}
+      disabled={!hasExplainer}
+      className="text-left group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-lg disabled:cursor-default"
     >
       <Card className={`p-5 bg-card/50 backdrop-blur border ${toneClass} transition-all hover:scale-[1.02] group-hover:shadow-[0_0_30px_-10px_hsl(var(--primary)/0.4)] cursor-pointer relative`}>
         <div className="flex items-start justify-between mb-3">
