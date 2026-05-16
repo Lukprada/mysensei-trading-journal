@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, createContext, useContext } from "react";
+
+const ExplainerContext = createContext<(title: string) => void>(() => {});
 import { useTrading } from "@/contexts/TradingContext";
 import { computeMetrics, interpretZScore, interpretKelly } from "@/lib/quantMetrics";
 import { METRIC_EXPLAINERS } from "@/lib/metricExplainers";
