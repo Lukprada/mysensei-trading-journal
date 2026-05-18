@@ -60,54 +60,133 @@ function Pillar({ title, value, hint, icon: Icon, tone = "neutral", formula }: P
   );
 }
 
+function PhaseCurveViz({ past, current, future }: { past: string; current: string; future: string }) {
+  return (
+    <div className="relative rounded-lg border border-primary/20 bg-background/40 p-5 overflow-hidden">
+      {/* glowing baseline */}
+      <div className="absolute left-0 right-0 top-1/2 h-px bg-gradient-to-r from-loss/40 via-primary to-profit/60 shadow-[0_0_12px_hsl(var(--primary)/0.6)]" />
+      <div className="relative grid grid-cols-3 gap-3 items-center">
+        <div className="text-left">
+          <div className="text-[9px] uppercase tracking-[0.2em] text-loss/80 mb-1 font-display">Past</div>
+          <div className="text-xs text-muted-foreground leading-snug">{past}</div>
+        </div>
+        <div className="text-center relative">
+          <div className="inline-flex items-center justify-center mx-auto mb-2">
+            <span className="block h-3 w-3 rounded-full bg-primary shadow-[0_0_16px_hsl(var(--primary))] animate-pulse" />
+          </div>
+          <div className="text-[9px] uppercase tracking-[0.2em] text-primary mb-1 font-display">Current</div>
+          <div className="text-xs text-foreground/90 leading-snug font-semibold">{current}</div>
+        </div>
+        <div className="text-right">
+          <div className="text-[9px] uppercase tracking-[0.2em] text-profit/80 mb-1 font-display">Future</div>
+          <div className="text-xs text-muted-foreground leading-snug">{future}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ExplainerDialog({
   metricKey, open, onOpenChange,
 }: { metricKey: string | null; open: boolean; onOpenChange: (o: boolean) => void }) {
   const data = metricKey ? METRIC_EXPLAINERS[metricKey] : null;
+  const n = data?.narrative;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-card/95 backdrop-blur border-primary/30">
+      <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto bg-card/95 backdrop-blur border-primary/30">
         {data ? (
           <>
             <DialogHeader>
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">
+                  SENSEI ARCHIVE
+                </Badge>
+                <Badge variant="outline" className="border-primary/20 text-muted-foreground text-[10px]">
                   QUANT PILLAR
                 </Badge>
               </div>
-              <DialogTitle className="text-2xl font-display tracking-[0.05em] text-gradient">
+              <DialogTitle className="text-2xl md:text-3xl font-display tracking-[0.05em] text-gradient">
                 {data.title}
               </DialogTitle>
               <DialogDescription className="font-mono text-sm text-primary/80 pt-2">
-                {data.formula}
+                {n?.quantCode ?? data.formula}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-5 mt-2">
+            <div className="space-y-6 mt-2">
+              {/* Origin Story */}
               <section>
                 <div className="flex items-center gap-2 mb-2">
                   <BookOpen className="h-4 w-4 text-primary" />
-                  <h3 className="text-xs uppercase tracking-[0.2em] font-display text-muted-foreground">
-                    Short History
+                  <h3 className="text-xs uppercase tracking-[0.25em] font-display text-muted-foreground">
+                    The Origin Story
                   </h3>
                 </div>
-                <p className="text-sm leading-relaxed text-foreground/90">{data.history}</p>
+                <p className="text-sm leading-relaxed text-foreground/90">
+                  {n?.originStory ?? data.history}
+                </p>
               </section>
 
+              {/* Quant Code */}
               <section>
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="h-4 w-4 text-primary" />
-                  <h3 className="text-xs uppercase tracking-[0.2em] font-display text-muted-foreground">
-                    Why It Matters
+                  <h3 className="text-xs uppercase tracking-[0.25em] font-display text-muted-foreground">
+                    The Quant Code
                   </h3>
                 </div>
-                <p className="text-sm leading-relaxed text-foreground/90">{data.importance}</p>
+                <div className="rounded-md border border-primary/20 bg-background/50 p-3 font-mono text-sm text-primary/90">
+                  {n?.quantCode ?? data.formula}
+                </div>
               </section>
 
+              {/* Psychological Phase Curve */}
+              {n?.phase && (
+                <section>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Activity className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs uppercase tracking-[0.25em] font-display text-muted-foreground">
+                      The Psychological Phase
+                    </h3>
+                  </div>
+                  <PhaseCurveViz past={n.phase.past} current={n.phase.current} future={n.phase.future} />
+                  <p className="text-xs italic text-muted-foreground mt-3 leading-relaxed">
+                    {n.phase.caption}
+                  </p>
+                </section>
+              )}
+
+              {/* Personal Command */}
+              {n?.command && (
+                <section className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Lightbulb className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs uppercase tracking-[0.25em] font-display text-primary">
+                      Your Personal Command
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground">{n.command}</p>
+                </section>
+              )}
+
+              {/* Fallback "Why it matters" if no narrative */}
+              {!n && (
+                <section>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs uppercase tracking-[0.25em] font-display text-muted-foreground">
+                      Why It Matters
+                    </h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground/90">{data.importance}</p>
+                </section>
+              )}
+
+              {/* How to improve — always */}
               <section>
                 <div className="flex items-center gap-2 mb-2">
                   <Lightbulb className="h-4 w-4 text-yellow-400" />
-                  <h3 className="text-xs uppercase tracking-[0.2em] font-display text-muted-foreground">
+                  <h3 className="text-xs uppercase tracking-[0.25em] font-display text-muted-foreground">
                     How to Improve It
                   </h3>
                 </div>
@@ -125,7 +204,7 @@ function ExplainerDialog({
                 <section className="border-t border-primary/10 pt-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Target className="h-4 w-4 text-profit" />
-                    <h3 className="text-xs uppercase tracking-[0.2em] font-display text-muted-foreground">
+                    <h3 className="text-xs uppercase tracking-[0.25em] font-display text-muted-foreground">
                       Benchmark
                     </h3>
                   </div>
