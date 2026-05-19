@@ -116,6 +116,19 @@ function ExplainerDialog({
             </DialogHeader>
 
             <div className="space-y-6 mt-2">
+              {/* Live historical trend */}
+              {metricKey && METRIC_TIME_MAP[metricKey] && (
+                <section>
+                  <div className="flex items-center gap-2 mb-3">
+                    <LineChart className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs uppercase tracking-[0.25em] font-display text-muted-foreground">
+                      Live Evolution
+                    </h3>
+                  </div>
+                  <MetricTrendChart metricTitle={metricKey} />
+                </section>
+              )}
+
               {/* Origin Story */}
               <section>
                 <div className="flex items-center gap-2 mb-2">
