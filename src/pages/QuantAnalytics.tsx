@@ -95,7 +95,7 @@ function ExplainerDialog({
   const n = data?.narrative;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto bg-card/95 backdrop-blur border-primary/30">
+      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto bg-card/95 backdrop-blur border-primary/30">
         {data ? (
           <>
             <DialogHeader>
