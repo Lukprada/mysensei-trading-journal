@@ -12,8 +12,10 @@ import {
 import {
   TrendingUp, TrendingDown, Target, Activity, Zap, Shield,
   BarChart3, Flame, Snowflake, Award, AlertTriangle, Gauge,
-  Brain, Clock, AlertCircle, CheckCircle2, Info, BookOpen, Lightbulb, Sparkles,
+  Brain, Clock, AlertCircle, CheckCircle2, Info, BookOpen, Lightbulb, Sparkles, LineChart,
 } from "lucide-react";
+import { MetricTrendChart } from "@/components/quant/MetricTrendChart";
+import { METRIC_TIME_MAP } from "@/lib/metricTimeSeries";
 
 interface PillarProps {
   title: string;
@@ -93,7 +95,7 @@ function ExplainerDialog({
   const n = data?.narrative;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto bg-card/95 backdrop-blur border-primary/30">
+      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto bg-card/95 backdrop-blur border-primary/30">
         {data ? (
           <>
             <DialogHeader>
@@ -114,6 +116,19 @@ function ExplainerDialog({
             </DialogHeader>
 
             <div className="space-y-6 mt-2">
+              {/* Live historical trend */}
+              {metricKey && METRIC_TIME_MAP[metricKey] && (
+                <section>
+                  <div className="flex items-center gap-2 mb-3">
+                    <LineChart className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs uppercase tracking-[0.25em] font-display text-muted-foreground">
+                      Live Evolution
+                    </h3>
+                  </div>
+                  <MetricTrendChart metricTitle={metricKey} />
+                </section>
+              )}
+
               {/* Origin Story */}
               <section>
                 <div className="flex items-center gap-2 mb-2">
