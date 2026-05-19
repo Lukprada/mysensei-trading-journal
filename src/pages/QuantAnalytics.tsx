@@ -12,8 +12,10 @@ import {
 import {
   TrendingUp, TrendingDown, Target, Activity, Zap, Shield,
   BarChart3, Flame, Snowflake, Award, AlertTriangle, Gauge,
-  Brain, Clock, AlertCircle, CheckCircle2, Info, BookOpen, Lightbulb, Sparkles,
+  Brain, Clock, AlertCircle, CheckCircle2, Info, BookOpen, Lightbulb, Sparkles, LineChart,
 } from "lucide-react";
+import { MetricTrendChart } from "@/components/quant/MetricTrendChart";
+import { METRIC_TIME_MAP } from "@/lib/metricTimeSeries";
 
 interface PillarProps {
   title: string;
