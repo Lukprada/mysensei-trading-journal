@@ -1,21 +1,25 @@
-import { useMemo, useState, createContext, useContext } from "react";
+import { useMemo, useState, createContext, useContext, useEffect } from "react";
 
 const ExplainerContext = createContext<(title: string) => void>(() => {});
 import { useTrading } from "@/contexts/TradingContext";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { computeMetrics, interpretZScore, interpretKelly } from "@/lib/quantMetrics";
 import { METRIC_EXPLAINERS } from "@/lib/metricExplainers";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   TrendingUp, TrendingDown, Target, Activity, Zap, Shield,
   BarChart3, Flame, Snowflake, Award, AlertTriangle, Gauge,
-  Brain, Clock, AlertCircle, CheckCircle2, Info, BookOpen, Lightbulb, Sparkles, LineChart,
+  Brain, Clock, AlertCircle, CheckCircle2, Info, BookOpen, Lightbulb, Sparkles, LineChart, Download,
 } from "lucide-react";
 import { MetricTrendChart } from "@/components/quant/MetricTrendChart";
 import { METRIC_TIME_MAP } from "@/lib/metricTimeSeries";
+import { ExportReportDialog } from "@/components/quant/ExportReportDialog";
 
 interface PillarProps {
   title: string;
@@ -241,8 +245,17 @@ function ExplainerDialog({
 
 export default function QuantAnalytics() {
   const { trades, activeAccount } = useTrading();
+  const { user } = useAuth();
   const initBalance = activeAccount?.initialBalance || 10000;
   const [explainerKey, setExplainerKey] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [username, setUsername] = useState<string>("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle()
+      .then(({ data }) => setUsername(data?.display_name || user.email?.split("@")[0] || "trader"));
+  }, [user?.id]);
 
   const m = useMemo(() => computeMetrics(trades, initBalance), [trades, initBalance]);
 
@@ -270,22 +283,38 @@ export default function QuantAnalytics() {
         open={!!explainerKey}
         onOpenChange={(o) => !o && setExplainerKey(null)}
       />
+      <ExportReportDialog
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        metrics={m}
+        account={activeAccount}
+        username={username}
+      />
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">
-            QUANT LIBRARY · v1
-          </Badge>
-          <span className="text-[10px] text-muted-foreground">
-            Computed from {trades.length} trade{trades.length === 1 ? "" : "s"}
-          </span>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="outline" className="border-primary/30 text-primary text-[10px]">
+              QUANT LIBRARY · v1
+            </Badge>
+            <span className="text-[10px] text-muted-foreground">
+              Computed from {trades.length} trade{trades.length === 1 ? "" : "s"}
+            </span>
+          </div>
+          <h1 className="text-3xl font-display tracking-[0.1em] text-gradient">
+            Edge & Risk Metrics
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Pure math on your trade log — no external data, no AI guesses.
+          </p>
         </div>
-        <h1 className="text-3xl font-display tracking-[0.1em] text-gradient">
-          Edge & Risk Metrics
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Pure math on your trade log — no external data, no AI guesses.
-        </p>
+        <Button
+          variant="outline"
+          className="gap-2 border-primary/40 hover:bg-primary/10"
+          onClick={() => setExportOpen(true)}
+        >
+          <Download className="h-4 w-4" /> Download Report
+        </Button>
       </div>
 
       {/* Module 1 — Probability & Skill */}
