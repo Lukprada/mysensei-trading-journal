@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RefreshCw, Link2, Trash2, CheckCircle2, AlertCircle, Clock, Upload, Info, ExternalLink } from "lucide-react";
+import { RefreshCw, Link2, Trash2, CheckCircle2, AlertCircle, Clock, Upload, Info, ExternalLink, Eye, EyeOff } from "lucide-react";
 
 interface CSVTrade {
   openTime: string;
@@ -68,6 +68,7 @@ export default function MyfxbookSync() {
   const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [hasCredentials, setHasCredentials] = useState(false);
@@ -384,13 +385,24 @@ export default function MyfxbookSync() {
             <Label htmlFor="mfx-password">
               Myfxbook Password {hasCredentials && "(leave blank to keep current)"}
             </Label>
-            <Input
-              id="mfx-password"
-              type="password"
-              placeholder={hasCredentials ? "••••••••" : "Enter password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <Input
+                id="mfx-password"
+                type={showPassword ? "text" : "password"}
+                placeholder={hasCredentials ? "••••••••" : "Enter password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div className="flex gap-3">
             <Button onClick={handleSaveCredentials} disabled={saving}>
