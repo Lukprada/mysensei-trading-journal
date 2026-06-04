@@ -6,10 +6,16 @@ import { TradeListPanel } from "@/components/dashboard/TradeListPanel";
 import { useTrading } from "@/contexts/TradingContext";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { Link2, PlusCircle, RefreshCw } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
-  const { activeAccount } = useTrading();
+  const { activeAccount, accounts, allTrades, loading } = useTrading();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const hasAccounts = accounts.length > 0;
+  const hasTrades = allTrades.length > 0;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -35,21 +41,73 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
-      <StatsCards />
+      {!loading && !hasAccounts ? (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.06] via-card/50 to-card/30 backdrop-blur p-10 md:p-14 text-center"
+        >
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.18),transparent_60%)]" />
+          <div className="mx-auto h-14 w-14 rounded-xl border border-primary/30 bg-primary/10 flex items-center justify-center mb-5">
+            <Link2 className="h-6 w-6 text-primary" />
+          </div>
+          <h3 className="text-lg font-display tracking-[0.15em] text-gradient mb-2">
+            NO ACCOUNTS YET
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+            Connect Myfxbook to automatically import your live, demo, or funded
+            accounts — or create one manually to start logging trades.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button asChild>
+              <Link to="/myfxbook-sync">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Connect Myfxbook
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/new-trade">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Log a trade manually
+              </Link>
+            </Button>
+          </div>
+        </motion.div>
+      ) : (
+        <>
+          <StatsCards />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <EquityCurve />
-        </div>
-        <WinRateChart />
-      </div>
+          {hasAccounts && !hasTrades && (
+            <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-5 text-sm text-muted-foreground flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <span className="text-foreground font-medium">No trades yet on this account.</span>{" "}
+                Sync Myfxbook or log a trade to populate your dashboard.
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/myfxbook-sync">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Sync now
+                </Link>
+              </Button>
+            </div>
+          )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <TradeCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
-        </div>
-        <TradeListPanel selectedDate={selectedDate} onClearDate={() => setSelectedDate(null)} />
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <EquityCurve />
+            </div>
+            <WinRateChart />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <TradeCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+            </div>
+            <TradeListPanel selectedDate={selectedDate} onClearDate={() => setSelectedDate(null)} />
+          </div>
+        </>
+      )}
     </div>
   );
 };
