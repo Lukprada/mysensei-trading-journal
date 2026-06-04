@@ -253,7 +253,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   return (
     <TradingContext.Provider value={{
       accounts, activeAccountId, activeAccount, trades, allTrades,
-      addAccount, setActiveAccount, addTrade, deleteTrade, getTradeById,
+      addAccount, updateAccount, deleteAccount, setActiveAccount, addTrade, deleteTrade, getTradeById,
       updateTradeCritique, uploadScreenshot, loading,
     }}>
       {children}
