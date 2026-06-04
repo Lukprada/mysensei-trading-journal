@@ -50,6 +50,7 @@ export function AppSidebar() {
         <div className="space-y-2">
           <AccountSelector />
           <CreateAccountDialog />
+          <ManageAccountsDialog />
         </div>
       </SidebarHeader>
 
