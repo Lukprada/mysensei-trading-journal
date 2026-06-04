@@ -2,6 +2,7 @@ import { NavLink } from "@/components/NavLink";
 import { LayoutDashboard, PlusCircle, List, Brain, LogOut, Activity, FileText, RefreshCw, BarChart3 } from "lucide-react";
 import { AccountSelector } from "@/components/AccountSelector";
 import { CreateAccountDialog } from "@/components/CreateAccountDialog";
+import { ManageAccountsDialog } from "@/components/ManageAccountsDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import {
