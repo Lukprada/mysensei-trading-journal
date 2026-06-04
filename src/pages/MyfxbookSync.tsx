@@ -256,21 +256,64 @@ export default function MyfxbookSync() {
   }
 
   async function handleDisconnect() {
-    const { error } = await supabase
-      .from("myfxbook_credentials")
-      .delete()
-      .eq("user_id", user!.id);
+    const confirmed = window.confirm(
+      "Disconnect Myfxbook? This will also remove all synced accounts and their trades from your journal. Manually-logged accounts and CSV-imported data will be kept."
+    );
+    if (!confirmed) return;
 
-    if (error) {
-      toast.error("Failed to disconnect");
-      return;
+    try {
+      // Find synced accounts (linked to a Myfxbook account ID)
+      const { data: syncedAccounts, error: accFetchErr } = await supabase
+        .from("accounts")
+        .select("id")
+        .eq("user_id", user!.id)
+        .not("myfxbook_account_id", "is", null);
+
+      if (accFetchErr) throw accFetchErr;
+
+      const accountIds = (syncedAccounts || []).map((a) => a.id);
+
+      if (accountIds.length > 0) {
+        // Delete trades for these accounts first (no cascade FK)
+        const { error: tradesErr } = await supabase
+          .from("trades")
+          .delete()
+          .eq("user_id", user!.id)
+          .in("account_id", accountIds);
+        if (tradesErr) throw tradesErr;
+
+        // Then delete the accounts
+        const { error: accDelErr } = await supabase
+          .from("accounts")
+          .delete()
+          .eq("user_id", user!.id)
+          .in("id", accountIds);
+        if (accDelErr) throw accDelErr;
+      }
+
+      // Finally remove the credentials
+      const { error } = await supabase
+        .from("myfxbook_credentials")
+        .delete()
+        .eq("user_id", user!.id);
+      if (error) throw error;
+
+      setHasCredentials(false);
+      setEmail("");
+      setPassword("");
+      setLastSynced(null);
+      setSyncResult(null);
+      toast.success(
+        accountIds.length > 0
+          ? `Disconnected. Removed ${accountIds.length} synced account(s).`
+          : "Myfxbook disconnected"
+      );
+      // Refresh app state so the sidebar account selector and dashboard update
+      setTimeout(() => window.location.reload(), 600);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to disconnect");
     }
-    setHasCredentials(false);
-    setEmail("");
-    setPassword("");
-    setLastSynced(null);
-    setSyncResult(null);
-    toast.success("Myfxbook disconnected");
   }
 
   if (loading) {
