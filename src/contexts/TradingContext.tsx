@@ -126,6 +126,29 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
     }]);
   }, [user]);
 
+  const updateAccount = useCallback(async (id: string, updates: Partial<Pick<Account, "name" | "type" | "currency" | "balance" | "initialBalance">>) => {
+    const payload: any = {};
+    if (updates.name !== undefined) payload.name = updates.name;
+    if (updates.type !== undefined) payload.type = updates.type;
+    if (updates.currency !== undefined) payload.currency = updates.currency;
+    if (updates.balance !== undefined) payload.balance = updates.balance;
+    if (updates.initialBalance !== undefined) payload.initial_balance = updates.initialBalance;
+
+    const { error } = await supabase.from("accounts").update(payload).eq("id", id);
+    if (error) { toast.error("Failed to update account"); return; }
+    setAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
+  }, []);
+
+  const deleteAccount = useCallback(async (id: string) => {
+    const { error: tradesErr } = await supabase.from("trades").delete().eq("account_id", id);
+    if (tradesErr) { toast.error("Failed to delete account trades"); return; }
+    const { error } = await supabase.from("accounts").delete().eq("id", id);
+    if (error) { toast.error("Failed to delete account"); return; }
+    setAllTrades((prev) => prev.filter((t) => t.accountId !== id));
+    setAccounts((prev) => prev.filter((a) => a.id !== id));
+    setActiveAccountIdState((curr) => (curr === id ? null : curr));
+  }, []);
+
   const setActiveAccount = useCallback((id: string | null) => {
     setActiveAccountIdState(id);
   }, []);
