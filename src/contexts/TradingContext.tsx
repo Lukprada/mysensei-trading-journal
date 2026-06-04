@@ -11,6 +11,8 @@ interface TradingContextType {
   trades: Trade[];
   allTrades: Trade[];
   addAccount: (account: Omit<Account, "id" | "createdAt">) => Promise<void>;
+  updateAccount: (id: string, updates: Partial<Pick<Account, "name" | "type" | "currency" | "balance" | "initialBalance">>) => Promise<void>;
+  deleteAccount: (id: string) => Promise<void>;
   setActiveAccount: (id: string | null) => void;
   addTrade: (data: TradeFormData) => Promise<void>;
   deleteTrade: (id: string) => Promise<void>;
