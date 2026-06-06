@@ -5,7 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { PlusCircle, Calendar, Edit, Trash2, FileText, User, Globe, Lock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { PlusCircle, Calendar, Edit, Trash2, FileText, User, Globe, Lock, HelpCircle, Image as ImageIcon, Pen, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -66,6 +68,17 @@ export default function AnalysisList() {
     else { setAnalyses((prev) => prev.filter((a) => a.id !== id)); toast.success("Deleted"); }
   }
 
+  async function togglePublished(a: Analysis) {
+    const next = !a.published;
+    const { error } = await supabase.from("analyses").update({
+      published: next,
+      published_at: next ? new Date().toISOString() : null,
+    }).eq("id", a.id);
+    if (error) { toast.error("Failed to update"); return; }
+    setAnalyses((prev) => prev.map((x) => x.id === a.id ? { ...x, published: next, published_at: next ? new Date().toISOString() : null } : x));
+    toast.success(next ? "Now public" : "Now private");
+  }
+
   const getPreview = (content: string) => {
     const plain = content.replace(/[#*`>\[\]()!_~-]/g, "").trim();
     return plain.length > 120 ? plain.substring(0, 120) + "..." : plain;
@@ -89,6 +102,35 @@ export default function AnalysisList() {
           <PlusCircle className="h-4 w-4" /> New Analysis
         </Button>
       </div>
+
+      {/* Help panel */}
+      <Accordion type="single" collapsible className="rounded-lg border border-border/40 bg-muted/20">
+        <AccordionItem value="how" className="border-0">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline">
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <HelpCircle className="h-4 w-4 text-primary" /> How to use the analysis blog
+            </span>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 text-sm text-muted-foreground space-y-3">
+            <div className="flex gap-3"><Pen className="h-4 w-4 text-primary shrink-0 mt-0.5" /><div>
+              <p className="font-medium text-foreground">1. Write</p>
+              <p>Click <em>New Analysis</em>. Add a title, optional tags (EURUSD, Swing, etc.), and write your breakdown in markdown — headings (#), bold (**bold**), bullet lists, and inline images all work.</p>
+            </div></div>
+            <div className="flex gap-3"><ImageIcon className="h-4 w-4 text-primary shrink-0 mt-0.5" /><div>
+              <p className="font-medium text-foreground">2. Cover image</p>
+              <p>Upload a file <strong>or</strong> paste a URL. For TradingView, hit the camera icon → "Copy link to chart image" and paste it — we'll render the snapshot.</p>
+            </div></div>
+            <div className="flex gap-3"><Lock className="h-4 w-4 text-primary shrink-0 mt-0.5" /><div>
+              <p className="font-medium text-foreground">3. Private vs Public</p>
+              <p>The toggle in the editor (or the switch on each card below) controls who sees it. <strong>Private</strong> = draft, only you. <strong>Public</strong> = visible in <em>Community</em> tab for every signed-in user and via the share link.</p>
+            </div></div>
+            <div className="flex gap-3"><Share2 className="h-4 w-4 text-primary shrink-0 mt-0.5" /><div>
+              <p className="font-medium text-foreground">4. Share</p>
+              <p>Open any public analysis and copy its URL — readers don't need an account to view it. Reactions and comments work for both anon and signed-in viewers.</p>
+            </div></div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-border/40">
@@ -119,6 +161,7 @@ export default function AnalysisList() {
               onOpen={() => navigate(`/analysis/${featured.id}`)}
               onEdit={() => navigate(`/analysis/${featured.id}/edit`)}
               onDelete={() => handleDelete(featured.id)}
+              onToggle={() => togglePublished(featured)}
               getPreview={getPreview}
             />
           )}
@@ -133,6 +176,7 @@ export default function AnalysisList() {
                   onOpen={() => navigate(`/analysis/${a.id}`)}
                   onEdit={() => navigate(`/analysis/${a.id}/edit`)}
                   onDelete={() => handleDelete(a.id)}
+                  onToggle={() => togglePublished(a)}
                   getPreview={getPreview}
                 />
               ))}
@@ -174,7 +218,7 @@ function AuthorMeta({ a }: { a: Analysis }) {
   );
 }
 
-function FeaturedCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any) {
+function FeaturedCard({ a, isOwner, onOpen, onEdit, onDelete, onToggle, getPreview }: any) {
   return (
     <Card className="overflow-hidden cursor-pointer group glass-card-hover border-border/50" onClick={onOpen}>
       <div className="flex flex-col md:flex-row">
@@ -189,13 +233,16 @@ function FeaturedCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any)
           </div>
         )}
         <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">Latest</Badge>
             {isOwner && (
-              <Badge variant={a.published ? "default" : "secondary"} className="text-[10px] gap-1">
-                {a.published ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                {a.published ? "Public" : "Draft"}
-              </Badge>
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <Badge variant={a.published ? "default" : "secondary"} className="text-[10px] gap-1">
+                  {a.published ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+                  {a.published ? "Public" : "Private"}
+                </Badge>
+                <Switch checked={a.published} onCheckedChange={onToggle} className="scale-75" />
+              </div>
             )}
           </div>
           <h2 className="text-2xl md:text-3xl font-bold font-display text-foreground group-hover:text-primary transition-colors leading-tight">
@@ -209,7 +256,7 @@ function FeaturedCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any)
             </div>
           )}
           {isOwner && (
-            <div className="flex items-center gap-1 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 mt-4">
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
                 <Edit className="h-4 w-4" />
               </Button>
@@ -224,7 +271,7 @@ function FeaturedCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any)
   );
 }
 
-function GridCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any) {
+function GridCard({ a, isOwner, onOpen, onEdit, onDelete, onToggle, getPreview }: any) {
   return (
     <Card className="overflow-hidden cursor-pointer group glass-card-hover border-border/50 flex flex-col" onClick={onOpen}>
       {a.cover_image_url ? (
@@ -238,11 +285,12 @@ function GridCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any) {
       )}
       <div className="p-5 flex-1 flex flex-col">
         {isOwner && (
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2" onClick={(e) => e.stopPropagation()}>
             <Badge variant={a.published ? "default" : "secondary"} className="text-[10px] gap-1">
               {a.published ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-              {a.published ? "Public" : "Draft"}
+              {a.published ? "Public" : "Private"}
             </Badge>
+            <Switch checked={a.published} onCheckedChange={onToggle} className="scale-75" />
           </div>
         )}
         <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors leading-snug line-clamp-2">{a.title}</h3>

@@ -3,6 +3,7 @@ export type Currency = "USD" | "GBP" | "EUR";
 export type Direction = "long" | "short";
 export type MentalState = "confident" | "anxious" | "impulsive";
 export type SetupTag = "FVG" | "OB" | "BOS" | "Sweep" | "Breakout" | "Reversal" | "Other";
+export type CashFlowType = "deposit" | "withdrawal";
 
 export const SETUP_TAGS: SetupTag[] = ["FVG", "OB", "BOS", "Sweep", "Breakout", "Reversal", "Other"];
 
@@ -32,13 +33,31 @@ export interface Trade {
   screenshotUrl?: string;
   aiCritique?: string;
   createdAt: string;
-  // New journaling fields
   stopLoss?: number;
   takeProfit?: number;
   exitTime?: string;
   setupTag?: SetupTag;
   rulesFollowed?: boolean;
   riskAmount?: number;
+  // Broker economics
+  commission?: number;
+  swap?: number;
+  magicNumber?: string;
+  brokerComment?: string;
+  // Journal + media
+  journalNotes?: string;
+  tradingviewLinks?: string[];
+  linkedGroupId?: string;
+}
+
+export interface CashFlow {
+  id: string;
+  accountId: string;
+  flowType: CashFlowType;
+  amount: number;
+  occurredAt: string;
+  source: string;
+  note?: string;
 }
 
 export interface TradeFormData {
@@ -67,10 +86,9 @@ export function calculatePips(entry: number, exit: number, direction: Direction,
 }
 
 export function calculatePnL(pips: number, positionSize: number): number {
-  return pips * positionSize * 10; // simplified: 1 pip = $10 per lot
+  return pips * positionSize * 10;
 }
 
-/** Planned R:R ratio from entry, SL, TP. Returns null if SL/TP missing or invalid. */
 export function calculatePlannedRR(
   entry: number,
   sl: number | undefined,
@@ -84,7 +102,6 @@ export function calculatePlannedRR(
   return reward / risk;
 }
 
-/** Realized R-multiple = pnl / risk_amount */
 export function calculateRMultiple(pnl: number, riskAmount: number | undefined): number | null {
   if (!riskAmount || riskAmount <= 0) return null;
   return pnl / riskAmount;

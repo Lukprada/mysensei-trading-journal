@@ -47,6 +47,7 @@ const TradeLog = () => {
                 <th className="text-left text-xs text-muted-foreground font-medium p-3">Date</th>
                 <th className="text-left text-xs text-muted-foreground font-medium p-3">Asset</th>
                 <th className="text-left text-xs text-muted-foreground font-medium p-3">Direction</th>
+                <th className="text-right text-xs text-muted-foreground font-medium p-3">Lots</th>
                 <th className="text-right text-xs text-muted-foreground font-medium p-3">Pips</th>
                 <th className="text-right text-xs text-muted-foreground font-medium p-3">P&L</th>
                 <th className="text-left text-xs text-muted-foreground font-medium p-3">State</th>
@@ -63,7 +64,12 @@ const TradeLog = () => {
                   className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors"
                 >
                   <td className="p-3 text-sm text-muted-foreground font-mono-numbers">{trade.date}</td>
-                  <td className="p-3 text-sm font-medium text-foreground">{trade.asset}</td>
+                  <td className="p-3 text-sm font-medium text-foreground">
+                    {trade.asset}
+                    {trade.linkedGroupId && (
+                      <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-display tracking-wider">LINKED</span>
+                    )}
+                  </td>
                   <td className="p-3">
                     <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
                       trade.direction === "long" ? "bg-profit/10 text-profit" : "bg-loss/10 text-loss"
@@ -72,6 +78,7 @@ const TradeLog = () => {
                       {trade.direction}
                     </span>
                   </td>
+                  <td className="p-3 text-sm text-right font-mono-numbers text-muted-foreground">{trade.positionSize}</td>
                   <td className={`p-3 text-sm text-right font-mono-numbers ${trade.pips >= 0 ? "text-profit" : "text-loss"}`}>
                     {trade.pips > 0 ? "+" : ""}{trade.pips}
                   </td>

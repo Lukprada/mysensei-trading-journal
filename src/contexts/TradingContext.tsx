@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Account, Trade, TradeFormData, calculatePips, calculatePnL } from "@/types/trading";
+import { Account, Trade, TradeFormData, CashFlow, calculatePips, calculatePnL } from "@/types/trading";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -10,12 +10,18 @@ interface TradingContextType {
   activeAccount: Account | null;
   trades: Trade[];
   allTrades: Trade[];
+  cashFlows: CashFlow[];
   addAccount: (account: Omit<Account, "id" | "createdAt">) => Promise<void>;
   updateAccount: (id: string, updates: Partial<Pick<Account, "name" | "type" | "currency" | "balance" | "initialBalance">>) => Promise<void>;
   deleteAccount: (id: string) => Promise<void>;
   setActiveAccount: (id: string | null) => void;
   addTrade: (data: TradeFormData) => Promise<void>;
   deleteTrade: (id: string) => Promise<void>;
+  updateTrade: (id: string, updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes">>) => Promise<void>;
+  linkTrades: (tradeIds: string[]) => Promise<void>;
+  unlinkTrade: (tradeId: string) => Promise<void>;
+  addCashFlow: (flow: Omit<CashFlow, "id">) => Promise<void>;
+  deleteCashFlow: (id: string) => Promise<void>;
   getTradeById: (id: string) => Trade | undefined;
   updateTradeCritique: (tradeId: string, critique: string) => void;
   uploadScreenshot: (file: File) => Promise<string | null>;
@@ -28,6 +34,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [allTrades, setAllTrades] = useState<Trade[]>([]);
+  const [cashFlows, setCashFlows] = useState<CashFlow[]>([]);
   const [activeAccountId, setActiveAccountIdState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +43,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
     if (!user) {
       setAccounts([]);
       setAllTrades([]);
+      setCashFlows([]);
       setActiveAccountIdState(null);
       setLoading(false);
       return;
@@ -47,13 +55,15 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     setLoading(true);
     try {
-      const [accRes, tradeRes] = await Promise.all([
+      const [accRes, tradeRes, flowRes] = await Promise.all([
         supabase.from("accounts").select("*").order("created_at", { ascending: true }),
         supabase.from("trades").select("*").order("date", { ascending: true }),
+        supabase.from("cash_flows").select("*").order("occurred_at", { ascending: true }),
       ]);
 
       if (accRes.error) throw accRes.error;
       if (tradeRes.error) throw tradeRes.error;
+      if (flowRes.error) throw flowRes.error;
 
       const mappedAccounts: Account[] = (accRes.data || []).map((a: any) => ({
         id: a.id,
@@ -87,10 +97,28 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
         setupTag: (t.setup_tag as Trade["setupTag"]) || undefined,
         rulesFollowed: t.rules_followed ?? undefined,
         riskAmount: t.risk_amount != null ? Number(t.risk_amount) : undefined,
+        commission: t.commission != null ? Number(t.commission) : undefined,
+        swap: t.swap != null ? Number(t.swap) : undefined,
+        magicNumber: t.magic_number || undefined,
+        brokerComment: t.broker_comment || undefined,
+        journalNotes: t.journal_notes || undefined,
+        tradingviewLinks: Array.isArray(t.tradingview_links) ? t.tradingview_links : [],
+        linkedGroupId: t.linked_group_id || undefined,
+      }));
+
+      const mappedFlows: CashFlow[] = (flowRes.data || []).map((f: any) => ({
+        id: f.id,
+        accountId: f.account_id,
+        flowType: f.flow_type,
+        amount: Number(f.amount),
+        occurredAt: f.occurred_at,
+        source: f.source,
+        note: f.note || undefined,
       }));
 
       setAccounts(mappedAccounts);
       setAllTrades(mappedTrades);
+      setCashFlows(mappedFlows);
     } catch (err: any) {
       console.error("Fetch error:", err);
       toast.error("Failed to load data");
@@ -250,11 +278,71 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
     return data.publicUrl;
   }, [user]);
 
+  const updateTrade = useCallback(async (id: string, updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes">>) => {
+    const payload: any = {};
+    if (updates.journalNotes !== undefined) payload.journal_notes = updates.journalNotes;
+    if (updates.tradingviewLinks !== undefined) payload.tradingview_links = updates.tradingviewLinks;
+    if (updates.linkedGroupId !== undefined) payload.linked_group_id = updates.linkedGroupId;
+    if (updates.notes !== undefined) payload.notes = updates.notes;
+    const { error } = await supabase.from("trades").update(payload).eq("id", id);
+    if (error) { toast.error("Failed to save"); console.error(error); return; }
+    setAllTrades((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+  }, []);
+
+  const linkTrades = useCallback(async (tradeIds: string[]) => {
+    if (tradeIds.length < 2) return;
+    const groupId = crypto.randomUUID();
+    const { error } = await supabase.from("trades").update({ linked_group_id: groupId }).in("id", tradeIds);
+    if (error) { toast.error("Failed to link trades"); return; }
+    setAllTrades((prev) => prev.map((t) => (tradeIds.includes(t.id) ? { ...t, linkedGroupId: groupId } : t)));
+    toast.success(`Linked ${tradeIds.length} trades into one position`);
+  }, []);
+
+  const unlinkTrade = useCallback(async (tradeId: string) => {
+    const { error } = await supabase.from("trades").update({ linked_group_id: null }).eq("id", tradeId);
+    if (error) { toast.error("Failed to unlink"); return; }
+    setAllTrades((prev) => prev.map((t) => (t.id === tradeId ? { ...t, linkedGroupId: undefined } : t)));
+  }, []);
+
+  const addCashFlow = useCallback(async (flow: Omit<CashFlow, "id">) => {
+    if (!user) return;
+    const { data, error } = await supabase.from("cash_flows").insert({
+      user_id: user.id,
+      account_id: flow.accountId,
+      flow_type: flow.flowType,
+      amount: flow.amount,
+      occurred_at: flow.occurredAt,
+      source: flow.source,
+      note: flow.note ?? null,
+    }).select().single();
+    if (error || !data) { toast.error("Failed to log cash flow"); return; }
+    setCashFlows((prev) => [...prev, {
+      id: data.id,
+      accountId: data.account_id,
+      flowType: data.flow_type as CashFlow["flowType"],
+      amount: Number(data.amount),
+      occurredAt: data.occurred_at,
+      source: data.source,
+      note: data.note || undefined,
+    }]);
+  }, [user]);
+
+  const deleteCashFlow = useCallback(async (id: string) => {
+    const { error } = await supabase.from("cash_flows").delete().eq("id", id);
+    if (error) { toast.error("Failed to delete"); return; }
+    setCashFlows((prev) => prev.filter((f) => f.id !== id));
+  }, []);
+
+  const scopedCashFlows = activeAccountId ? cashFlows.filter((f) => f.accountId === activeAccountId) : cashFlows;
+
   return (
     <TradingContext.Provider value={{
       accounts, activeAccountId, activeAccount, trades, allTrades,
-      addAccount, updateAccount, deleteAccount, setActiveAccount, addTrade, deleteTrade, getTradeById,
-      updateTradeCritique, uploadScreenshot, loading,
+      cashFlows: scopedCashFlows,
+      addAccount, updateAccount, deleteAccount, setActiveAccount,
+      addTrade, deleteTrade, updateTrade, linkTrades, unlinkTrade,
+      addCashFlow, deleteCashFlow,
+      getTradeById, updateTradeCritique, uploadScreenshot, loading,
     }}>
       {children}
     </TradingContext.Provider>

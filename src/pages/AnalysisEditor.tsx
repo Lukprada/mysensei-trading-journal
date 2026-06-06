@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { MarkdownEditor } from "@/components/analysis/MarkdownEditor";
 import { ImageUpload } from "@/components/analysis/ImageUpload";
-import { ArrowLeft, Save, Send, X } from "lucide-react";
+import { ArrowLeft, Save, Globe, Lock, X } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AnalysisEditor() {
@@ -22,6 +23,7 @@ export default function AnalysisEditor() {
   const [coverUrl, setCoverUrl] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [published, setPublished] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
 
@@ -42,6 +44,7 @@ export default function AnalysisEditor() {
           setContent(data.content);
           setCoverUrl(data.cover_image_url || "");
           setTags(data.tags || []);
+          setPublished(!!data.published);
           setLoading(false);
         });
     }
@@ -55,7 +58,7 @@ export default function AnalysisEditor() {
     }
   }
 
-  async function handleSave(publish = false) {
+  async function handleSave() {
     if (!user) return;
     if (!title.trim()) { toast.error("Title is required"); return; }
     if (!content.trim()) { toast.error("Content is required"); return; }
@@ -67,8 +70,8 @@ export default function AnalysisEditor() {
       content,
       cover_image_url: coverUrl || null,
       tags,
-      published: publish,
-      published_at: publish ? new Date().toISOString() : null,
+      published,
+      published_at: published ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     };
 
@@ -84,7 +87,7 @@ export default function AnalysisEditor() {
       toast.error("Failed to save");
       console.error(error);
     } else {
-      toast.success(publish ? "Published!" : "Saved as draft");
+      toast.success(published ? "Saved & public" : "Saved as private draft");
       navigate("/analysis");
     }
   }
@@ -155,13 +158,28 @@ export default function AnalysisEditor() {
         <MarkdownEditor content={content} onChange={setContent} />
       </div>
 
+      {/* Visibility toggle */}
+      <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+        <div className="flex items-start gap-3">
+          {published ? <Globe className="h-5 w-5 text-primary mt-0.5" /> : <Lock className="h-5 w-5 text-muted-foreground mt-0.5" />}
+          <div>
+            <Label htmlFor="published-switch" className="text-sm font-medium cursor-pointer">
+              {published ? "Public — visible to the community" : "Private — only you can see this"}
+            </Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              {published
+                ? "Anyone with the app or the share link can read this analysis."
+                : "Save as a private draft. Flip this on when you're ready to share."}
+            </p>
+          </div>
+        </div>
+        <Switch id="published-switch" checked={published} onCheckedChange={setPublished} />
+      </div>
+
       {/* Actions */}
       <div className="flex items-center gap-3 pt-4 border-t border-border">
-        <Button variant="outline" onClick={() => handleSave(false)} disabled={saving} className="gap-2">
-          <Save className="h-4 w-4" /> Save Draft
-        </Button>
-        <Button onClick={() => handleSave(true)} disabled={saving} className="gap-2">
-          <Send className="h-4 w-4" /> Publish
+        <Button onClick={handleSave} disabled={saving} className="gap-2">
+          <Save className="h-4 w-4" /> {saving ? "Saving..." : (published ? "Save & Publish" : "Save Draft")}
         </Button>
       </div>
     </div>
