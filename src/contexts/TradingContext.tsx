@@ -277,11 +277,71 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
     return data.publicUrl;
   }, [user]);
 
+  const updateTrade = useCallback(async (id: string, updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes">>) => {
+    const payload: any = {};
+    if (updates.journalNotes !== undefined) payload.journal_notes = updates.journalNotes;
+    if (updates.tradingviewLinks !== undefined) payload.tradingview_links = updates.tradingviewLinks;
+    if (updates.linkedGroupId !== undefined) payload.linked_group_id = updates.linkedGroupId;
+    if (updates.notes !== undefined) payload.notes = updates.notes;
+    const { error } = await supabase.from("trades").update(payload).eq("id", id);
+    if (error) { toast.error("Failed to save"); console.error(error); return; }
+    setAllTrades((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+  }, []);
+
+  const linkTrades = useCallback(async (tradeIds: string[]) => {
+    if (tradeIds.length < 2) return;
+    const groupId = crypto.randomUUID();
+    const { error } = await supabase.from("trades").update({ linked_group_id: groupId }).in("id", tradeIds);
+    if (error) { toast.error("Failed to link trades"); return; }
+    setAllTrades((prev) => prev.map((t) => (tradeIds.includes(t.id) ? { ...t, linkedGroupId: groupId } : t)));
+    toast.success(`Linked ${tradeIds.length} trades into one position`);
+  }, []);
+
+  const unlinkTrade = useCallback(async (tradeId: string) => {
+    const { error } = await supabase.from("trades").update({ linked_group_id: null }).eq("id", tradeId);
+    if (error) { toast.error("Failed to unlink"); return; }
+    setAllTrades((prev) => prev.map((t) => (t.id === tradeId ? { ...t, linkedGroupId: undefined } : t)));
+  }, []);
+
+  const addCashFlow = useCallback(async (flow: Omit<CashFlow, "id">) => {
+    if (!user) return;
+    const { data, error } = await supabase.from("cash_flows").insert({
+      user_id: user.id,
+      account_id: flow.accountId,
+      flow_type: flow.flowType,
+      amount: flow.amount,
+      occurred_at: flow.occurredAt,
+      source: flow.source,
+      note: flow.note ?? null,
+    }).select().single();
+    if (error || !data) { toast.error("Failed to log cash flow"); return; }
+    setCashFlows((prev) => [...prev, {
+      id: data.id,
+      accountId: data.account_id,
+      flowType: data.flow_type as CashFlow["flowType"],
+      amount: Number(data.amount),
+      occurredAt: data.occurred_at,
+      source: data.source,
+      note: data.note || undefined,
+    }]);
+  }, [user]);
+
+  const deleteCashFlow = useCallback(async (id: string) => {
+    const { error } = await supabase.from("cash_flows").delete().eq("id", id);
+    if (error) { toast.error("Failed to delete"); return; }
+    setCashFlows((prev) => prev.filter((f) => f.id !== id));
+  }, []);
+
+  const scopedCashFlows = activeAccountId ? cashFlows.filter((f) => f.accountId === activeAccountId) : cashFlows;
+
   return (
     <TradingContext.Provider value={{
       accounts, activeAccountId, activeAccount, trades, allTrades,
-      addAccount, updateAccount, deleteAccount, setActiveAccount, addTrade, deleteTrade, getTradeById,
-      updateTradeCritique, uploadScreenshot, loading,
+      cashFlows: scopedCashFlows,
+      addAccount, updateAccount, deleteAccount, setActiveAccount,
+      addTrade, deleteTrade, updateTrade, linkTrades, unlinkTrade,
+      addCashFlow, deleteCashFlow,
+      getTradeById, updateTradeCritique, uploadScreenshot, loading,
     }}>
       {children}
     </TradingContext.Provider>
