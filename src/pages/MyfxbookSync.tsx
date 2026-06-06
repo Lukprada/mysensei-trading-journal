@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RefreshCw, Link2, Trash2, CheckCircle2, AlertCircle, Clock, Upload, Info, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { RefreshCw, Link2, Trash2, CheckCircle2, AlertCircle, Clock, Upload, Info, ExternalLink, Eye, EyeOff, Shield, Server, Lock, FileText } from "lucide-react";
 
 interface CSVTrade {
   openTime: string;
