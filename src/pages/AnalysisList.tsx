@@ -103,6 +103,35 @@ export default function AnalysisList() {
         </Button>
       </div>
 
+      {/* Help panel */}
+      <Accordion type="single" collapsible className="rounded-lg border border-border/40 bg-muted/20">
+        <AccordionItem value="how" className="border-0">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline">
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <HelpCircle className="h-4 w-4 text-primary" /> How to use the analysis blog
+            </span>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4 text-sm text-muted-foreground space-y-3">
+            <div className="flex gap-3"><Pen className="h-4 w-4 text-primary shrink-0 mt-0.5" /><div>
+              <p className="font-medium text-foreground">1. Write</p>
+              <p>Click <em>New Analysis</em>. Add a title, optional tags (EURUSD, Swing, etc.), and write your breakdown in markdown — headings (#), bold (**bold**), bullet lists, and inline images all work.</p>
+            </div></div>
+            <div className="flex gap-3"><ImageIcon className="h-4 w-4 text-primary shrink-0 mt-0.5" /><div>
+              <p className="font-medium text-foreground">2. Cover image</p>
+              <p>Upload a file <strong>or</strong> paste a URL. For TradingView, hit the camera icon → "Copy link to chart image" and paste it — we'll render the snapshot.</p>
+            </div></div>
+            <div className="flex gap-3"><Lock className="h-4 w-4 text-primary shrink-0 mt-0.5" /><div>
+              <p className="font-medium text-foreground">3. Private vs Public</p>
+              <p>The toggle in the editor (or the switch on each card below) controls who sees it. <strong>Private</strong> = draft, only you. <strong>Public</strong> = visible in <em>Community</em> tab for every signed-in user and via the share link.</p>
+            </div></div>
+            <div className="flex gap-3"><Share2 className="h-4 w-4 text-primary shrink-0 mt-0.5" /><div>
+              <p className="font-medium text-foreground">4. Share</p>
+              <p>Open any public analysis and copy its URL — readers don't need an account to view it. Reactions and comments work for both anon and signed-in viewers.</p>
+            </div></div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
       {/* Tabs */}
       <div className="flex gap-2 border-b border-border/40">
         <TabButton active={tab === "all"} onClick={() => setTab("all")} icon={Globe} label="Community" />
