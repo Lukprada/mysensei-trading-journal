@@ -120,7 +120,11 @@ Deno.serve(async (req) => {
             pips: trade.pips || 0,
             pnl: trade.profit || 0,
             mental_state: "confident",
-            notes: trade.comment || "",
+            notes: "",
+            broker_comment: trade.comment || null,
+            magic_number: trade.magic ? String(trade.magic) : null,
+            commission: trade.commission || 0,
+            swap: (trade.swap || 0) + (trade.interest || 0),
             source: "myfxbook",
             external_id: externalId,
             stop_loss: trade.sl && trade.sl > 0 ? trade.sl : null,
@@ -130,6 +134,38 @@ Deno.serve(async (req) => {
 
           if (!insertErr) userTradeCount++;
         }
+
+        // Pull deposits/withdrawals
+        try {
+          const today = new Date().toISOString().split("T")[0];
+          const start = "2000-01-01";
+          const dailyRes = await fetch(`${MYFXBOOK_API}/get-data-daily.json?session=${session}&id=${mfxAcc.id}&start=${start}&end=${today}`);
+          const daily = await dailyRes.json();
+          if (!daily.error && Array.isArray(daily.dataDaily)) {
+            for (const dayBucket of daily.dataDaily) {
+              for (const row of dayBucket || []) {
+                const dep = Number(row.deposits || 0);
+                const wd = Number(row.withdrawals || 0);
+                if (dep === 0 && wd === 0) continue;
+                const dateKey = row.date || dayBucket[0]?.date;
+                if (dep !== 0) {
+                  await supabase.from("cash_flows").upsert({
+                    user_id: creds.user_id, account_id: accountId, flow_type: "deposit",
+                    amount: dep, occurred_at: new Date(dateKey).toISOString(),
+                    source: "myfxbook", external_id: `mfxb_flow_${mfxAcc.id}_${dateKey}_dep`,
+                  }, { onConflict: "external_id" });
+                }
+                if (wd !== 0) {
+                  await supabase.from("cash_flows").upsert({
+                    user_id: creds.user_id, account_id: accountId, flow_type: "withdrawal",
+                    amount: Math.abs(wd), occurred_at: new Date(dateKey).toISOString(),
+                    source: "myfxbook", external_id: `mfxb_flow_${mfxAcc.id}_${dateKey}_wd`,
+                  }, { onConflict: "external_id" });
+                }
+              }
+            }
+          }
+        } catch (e) { console.warn("Cash flow sync skipped:", e); }
       }
 
       // Update last synced
