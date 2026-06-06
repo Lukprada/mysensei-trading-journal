@@ -54,13 +54,15 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     setLoading(true);
     try {
-      const [accRes, tradeRes] = await Promise.all([
+      const [accRes, tradeRes, flowRes] = await Promise.all([
         supabase.from("accounts").select("*").order("created_at", { ascending: true }),
         supabase.from("trades").select("*").order("date", { ascending: true }),
+        supabase.from("cash_flows").select("*").order("occurred_at", { ascending: true }),
       ]);
 
       if (accRes.error) throw accRes.error;
       if (tradeRes.error) throw tradeRes.error;
+      if (flowRes.error) throw flowRes.error;
 
       const mappedAccounts: Account[] = (accRes.data || []).map((a: any) => ({
         id: a.id,
