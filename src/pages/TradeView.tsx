@@ -180,6 +180,42 @@ const TradeView = () => {
             ))}
           </div>
 
+          {/* Broker economics */}
+          {(trade.commission !== undefined || trade.swap !== undefined || trade.brokerComment || trade.magicNumber) && (
+            <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+              <h3 className="text-sm font-medium text-foreground flex items-center gap-2">💼 Broker Details</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                {trade.commission !== undefined && (
+                  <div><span className="text-xs text-muted-foreground block">Commission</span>
+                    <span className={`font-mono-numbers ${trade.commission < 0 ? "text-loss" : ""}`}>
+                      ${trade.commission.toFixed(2)}
+                    </span></div>
+                )}
+                {trade.swap !== undefined && (
+                  <div><span className="text-xs text-muted-foreground block">Swap</span>
+                    <span className={`font-mono-numbers ${trade.swap < 0 ? "text-loss" : trade.swap > 0 ? "text-profit" : ""}`}>
+                      ${trade.swap.toFixed(2)}
+                    </span></div>
+                )}
+                {trade.commission !== undefined && trade.swap !== undefined && (
+                  <div><span className="text-xs text-muted-foreground block">Net P&L</span>
+                    <span className={`font-mono-numbers font-semibold ${(trade.pnl + trade.commission + trade.swap) >= 0 ? "text-profit" : "text-loss"}`}>
+                      ${(trade.pnl + trade.commission + trade.swap).toFixed(2)}
+                    </span></div>
+                )}
+                {trade.magicNumber && (
+                  <div><span className="text-xs text-muted-foreground block">Magic #</span>
+                    <span className="font-mono-numbers">{trade.magicNumber}</span></div>
+                )}
+              </div>
+              {trade.brokerComment && (
+                <p className="text-xs text-muted-foreground border-t border-border/40 pt-2">
+                  <span className="font-medium text-foreground">Broker comment:</span> {trade.brokerComment}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Plan & Risk panel — only renders if any of the new fields exist */}
           {(trade.stopLoss || trade.takeProfit || trade.riskAmount || trade.setupTag || trade.rulesFollowed !== undefined) && (
             <div className="rounded-lg border border-border bg-card p-4 space-y-3">
