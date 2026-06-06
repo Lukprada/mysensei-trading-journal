@@ -28,6 +28,10 @@ interface MyfxbookTrade {
   sl: number;
   pips: number;
   profit: number;
+  commission?: number;
+  swap?: number;
+  interest?: number;
+  magic?: number | string;
   comment: string;
 }
 
