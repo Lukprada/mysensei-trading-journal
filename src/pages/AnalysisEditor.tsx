@@ -158,13 +158,28 @@ export default function AnalysisEditor() {
         <MarkdownEditor content={content} onChange={setContent} />
       </div>
 
+      {/* Visibility toggle */}
+      <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+        <div className="flex items-start gap-3">
+          {published ? <Globe className="h-5 w-5 text-primary mt-0.5" /> : <Lock className="h-5 w-5 text-muted-foreground mt-0.5" />}
+          <div>
+            <Label htmlFor="published-switch" className="text-sm font-medium cursor-pointer">
+              {published ? "Public — visible to the community" : "Private — only you can see this"}
+            </Label>
+            <p className="text-xs text-muted-foreground mt-1">
+              {published
+                ? "Anyone with the app or the share link can read this analysis."
+                : "Save as a private draft. Flip this on when you're ready to share."}
+            </p>
+          </div>
+        </div>
+        <Switch id="published-switch" checked={published} onCheckedChange={setPublished} />
+      </div>
+
       {/* Actions */}
       <div className="flex items-center gap-3 pt-4 border-t border-border">
-        <Button variant="outline" onClick={() => handleSave(false)} disabled={saving} className="gap-2">
-          <Save className="h-4 w-4" /> Save Draft
-        </Button>
-        <Button onClick={() => handleSave(true)} disabled={saving} className="gap-2">
-          <Send className="h-4 w-4" /> Publish
+        <Button onClick={handleSave} disabled={saving} className="gap-2">
+          <Save className="h-4 w-4" /> {saving ? "Saving..." : (published ? "Save & Publish" : "Save Draft")}
         </Button>
       </div>
     </div>
