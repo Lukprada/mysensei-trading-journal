@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Account, Trade, TradeFormData, calculatePips, calculatePnL } from "@/types/trading";
+import { Account, Trade, TradeFormData, CashFlow, calculatePips, calculatePnL } from "@/types/trading";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -10,12 +10,18 @@ interface TradingContextType {
   activeAccount: Account | null;
   trades: Trade[];
   allTrades: Trade[];
+  cashFlows: CashFlow[];
   addAccount: (account: Omit<Account, "id" | "createdAt">) => Promise<void>;
   updateAccount: (id: string, updates: Partial<Pick<Account, "name" | "type" | "currency" | "balance" | "initialBalance">>) => Promise<void>;
   deleteAccount: (id: string) => Promise<void>;
   setActiveAccount: (id: string | null) => void;
   addTrade: (data: TradeFormData) => Promise<void>;
   deleteTrade: (id: string) => Promise<void>;
+  updateTrade: (id: string, updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes">>) => Promise<void>;
+  linkTrades: (tradeIds: string[]) => Promise<void>;
+  unlinkTrade: (tradeId: string) => Promise<void>;
+  addCashFlow: (flow: Omit<CashFlow, "id">) => Promise<void>;
+  deleteCashFlow: (id: string) => Promise<void>;
   getTradeById: (id: string) => Trade | undefined;
   updateTradeCritique: (tradeId: string, critique: string) => void;
   uploadScreenshot: (file: File) => Promise<string | null>;
