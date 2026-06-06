@@ -68,6 +68,17 @@ export default function AnalysisList() {
     else { setAnalyses((prev) => prev.filter((a) => a.id !== id)); toast.success("Deleted"); }
   }
 
+  async function togglePublished(a: Analysis) {
+    const next = !a.published;
+    const { error } = await supabase.from("analyses").update({
+      published: next,
+      published_at: next ? new Date().toISOString() : null,
+    }).eq("id", a.id);
+    if (error) { toast.error("Failed to update"); return; }
+    setAnalyses((prev) => prev.map((x) => x.id === a.id ? { ...x, published: next, published_at: next ? new Date().toISOString() : null } : x));
+    toast.success(next ? "Now public" : "Now private");
+  }
+
   const getPreview = (content: string) => {
     const plain = content.replace(/[#*`>\[\]()!_~-]/g, "").trim();
     return plain.length > 120 ? plain.substring(0, 120) + "..." : plain;
