@@ -218,7 +218,7 @@ function AuthorMeta({ a }: { a: Analysis }) {
   );
 }
 
-function FeaturedCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any) {
+function FeaturedCard({ a, isOwner, onOpen, onEdit, onDelete, onToggle, getPreview }: any) {
   return (
     <Card className="overflow-hidden cursor-pointer group glass-card-hover border-border/50" onClick={onOpen}>
       <div className="flex flex-col md:flex-row">
@@ -233,13 +233,16 @@ function FeaturedCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any)
           </div>
         )}
         <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">Latest</Badge>
             {isOwner && (
-              <Badge variant={a.published ? "default" : "secondary"} className="text-[10px] gap-1">
-                {a.published ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                {a.published ? "Public" : "Draft"}
-              </Badge>
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <Badge variant={a.published ? "default" : "secondary"} className="text-[10px] gap-1">
+                  {a.published ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+                  {a.published ? "Public" : "Private"}
+                </Badge>
+                <Switch checked={a.published} onCheckedChange={onToggle} className="scale-75" />
+              </div>
             )}
           </div>
           <h2 className="text-2xl md:text-3xl font-bold font-display text-foreground group-hover:text-primary transition-colors leading-tight">
@@ -253,7 +256,7 @@ function FeaturedCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any)
             </div>
           )}
           {isOwner && (
-            <div className="flex items-center gap-1 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 mt-4">
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
                 <Edit className="h-4 w-4" />
               </Button>
