@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { MarkdownEditor } from "@/components/analysis/MarkdownEditor";
 import { ImageUpload } from "@/components/analysis/ImageUpload";
-import { ArrowLeft, Save, Send, X } from "lucide-react";
+import { ArrowLeft, Save, Globe, Lock, X } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AnalysisEditor() {
