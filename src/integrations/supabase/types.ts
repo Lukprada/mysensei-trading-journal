@@ -182,6 +182,45 @@ export type Database = {
           },
         ]
       }
+      cash_flows: {
+        Row: {
+          account_id: string
+          amount: number
+          created_at: string
+          external_id: string | null
+          flow_type: string
+          id: string
+          note: string | null
+          occurred_at: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          created_at?: string
+          external_id?: string | null
+          flow_type: string
+          id?: string
+          note?: string | null
+          occurred_at?: string
+          source?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          created_at?: string
+          external_id?: string | null
+          flow_type?: string
+          id?: string
+          note?: string | null
+          occurred_at?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       myfxbook_credentials: {
         Row: {
           created_at: string
@@ -238,6 +277,8 @@ export type Database = {
           account_id: string
           ai_critique: string | null
           asset: string
+          broker_comment: string | null
+          commission: number | null
           created_at: string
           date: string
           direction: string
@@ -246,6 +287,9 @@ export type Database = {
           exit_time: string | null
           external_id: string | null
           id: string
+          journal_notes: string | null
+          linked_group_id: string | null
+          magic_number: string | null
           mental_state: string
           notes: string | null
           pips: number
@@ -257,13 +301,17 @@ export type Database = {
           setup_tag: string | null
           source: string
           stop_loss: number | null
+          swap: number | null
           take_profit: number | null
+          tradingview_links: string[] | null
           user_id: string
         }
         Insert: {
           account_id: string
           ai_critique?: string | null
           asset: string
+          broker_comment?: string | null
+          commission?: number | null
           created_at?: string
           date?: string
           direction: string
@@ -272,6 +320,9 @@ export type Database = {
           exit_time?: string | null
           external_id?: string | null
           id?: string
+          journal_notes?: string | null
+          linked_group_id?: string | null
+          magic_number?: string | null
           mental_state?: string
           notes?: string | null
           pips?: number
@@ -283,13 +334,17 @@ export type Database = {
           setup_tag?: string | null
           source?: string
           stop_loss?: number | null
+          swap?: number | null
           take_profit?: number | null
+          tradingview_links?: string[] | null
           user_id: string
         }
         Update: {
           account_id?: string
           ai_critique?: string | null
           asset?: string
+          broker_comment?: string | null
+          commission?: number | null
           created_at?: string
           date?: string
           direction?: string
@@ -298,6 +353,9 @@ export type Database = {
           exit_time?: string | null
           external_id?: string | null
           id?: string
+          journal_notes?: string | null
+          linked_group_id?: string | null
+          magic_number?: string | null
           mental_state?: string
           notes?: string | null
           pips?: number
@@ -309,7 +367,9 @@ export type Database = {
           setup_tag?: string | null
           source?: string
           stop_loss?: number | null
+          swap?: number | null
           take_profit?: number | null
+          tradingview_links?: string[] | null
           user_id?: string
         }
         Relationships: [
