@@ -271,7 +271,7 @@ function FeaturedCard({ a, isOwner, onOpen, onEdit, onDelete, onToggle, getPrevi
   );
 }
 
-function GridCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any) {
+function GridCard({ a, isOwner, onOpen, onEdit, onDelete, onToggle, getPreview }: any) {
   return (
     <Card className="overflow-hidden cursor-pointer group glass-card-hover border-border/50 flex flex-col" onClick={onOpen}>
       {a.cover_image_url ? (
@@ -285,11 +285,12 @@ function GridCard({ a, isOwner, onOpen, onEdit, onDelete, getPreview }: any) {
       )}
       <div className="p-5 flex-1 flex flex-col">
         {isOwner && (
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2" onClick={(e) => e.stopPropagation()}>
             <Badge variant={a.published ? "default" : "secondary"} className="text-[10px] gap-1">
               {a.published ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-              {a.published ? "Public" : "Draft"}
+              {a.published ? "Public" : "Private"}
             </Badge>
+            <Switch checked={a.published} onCheckedChange={onToggle} className="scale-75" />
           </div>
         )}
         <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors leading-snug line-clamp-2">{a.title}</h3>
