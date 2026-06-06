@@ -34,6 +34,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [allTrades, setAllTrades] = useState<Trade[]>([]);
+  const [cashFlows, setCashFlows] = useState<CashFlow[]>([]);
   const [activeAccountId, setActiveAccountIdState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
