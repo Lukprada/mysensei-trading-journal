@@ -5,7 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { PlusCircle, Calendar, Edit, Trash2, FileText, User, Globe, Lock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { PlusCircle, Calendar, Edit, Trash2, FileText, User, Globe, Lock, HelpCircle, Image as ImageIcon, Pen, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
