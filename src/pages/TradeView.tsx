@@ -9,6 +9,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { streamSenseiChat, type ChatMessage } from "@/lib/streamChat";
+import { TradeJournalPanel } from "@/components/TradeJournalPanel";
 
 const mentalStateEmoji: Record<string, string> = {
   confident: "😎",
