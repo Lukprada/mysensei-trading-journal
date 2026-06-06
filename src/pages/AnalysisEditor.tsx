@@ -23,6 +23,7 @@ export default function AnalysisEditor() {
   const [coverUrl, setCoverUrl] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [published, setPublished] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
 
