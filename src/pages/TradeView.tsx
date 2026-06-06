@@ -260,10 +260,13 @@ const TradeView = () => {
 
           {trade.notes && (
             <div className="rounded-lg border border-border bg-card p-4">
-              <h3 className="text-sm font-medium text-foreground mb-2">Notes</h3>
+              <h3 className="text-sm font-medium text-foreground mb-2">Quick Notes</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{trade.notes}</p>
             </div>
           )}
+
+          {/* Journal, TradingView links, link partial fills */}
+          <TradeJournalPanel trade={trade} />
 
           {chatMessages.length === 0 && (
             <Button
