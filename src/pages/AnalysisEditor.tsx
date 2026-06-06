@@ -44,6 +44,7 @@ export default function AnalysisEditor() {
           setContent(data.content);
           setCoverUrl(data.cover_image_url || "");
           setTags(data.tags || []);
+          setPublished(!!data.published);
           setLoading(false);
         });
     }
