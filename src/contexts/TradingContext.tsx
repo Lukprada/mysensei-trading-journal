@@ -96,10 +96,28 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
         setupTag: (t.setup_tag as Trade["setupTag"]) || undefined,
         rulesFollowed: t.rules_followed ?? undefined,
         riskAmount: t.risk_amount != null ? Number(t.risk_amount) : undefined,
+        commission: t.commission != null ? Number(t.commission) : undefined,
+        swap: t.swap != null ? Number(t.swap) : undefined,
+        magicNumber: t.magic_number || undefined,
+        brokerComment: t.broker_comment || undefined,
+        journalNotes: t.journal_notes || undefined,
+        tradingviewLinks: Array.isArray(t.tradingview_links) ? t.tradingview_links : [],
+        linkedGroupId: t.linked_group_id || undefined,
+      }));
+
+      const mappedFlows: CashFlow[] = (flowRes.data || []).map((f: any) => ({
+        id: f.id,
+        accountId: f.account_id,
+        flowType: f.flow_type,
+        amount: Number(f.amount),
+        occurredAt: f.occurred_at,
+        source: f.source,
+        note: f.note || undefined,
       }));
 
       setAccounts(mappedAccounts);
       setAllTrades(mappedTrades);
+      setCashFlows(mappedFlows);
     } catch (err: any) {
       console.error("Fetch error:", err);
       toast.error("Failed to load data");
