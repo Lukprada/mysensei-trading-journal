@@ -43,6 +43,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
     if (!user) {
       setAccounts([]);
       setAllTrades([]);
+      setCashFlows([]);
       setActiveAccountIdState(null);
       setLoading(false);
       return;
