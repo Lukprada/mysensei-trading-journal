@@ -161,6 +161,7 @@ export default function AnalysisList() {
               onOpen={() => navigate(`/analysis/${featured.id}`)}
               onEdit={() => navigate(`/analysis/${featured.id}/edit`)}
               onDelete={() => handleDelete(featured.id)}
+              onToggle={() => togglePublished(featured)}
               getPreview={getPreview}
             />
           )}
@@ -175,6 +176,7 @@ export default function AnalysisList() {
                   onOpen={() => navigate(`/analysis/${a.id}`)}
                   onEdit={() => navigate(`/analysis/${a.id}/edit`)}
                   onDelete={() => handleDelete(a.id)}
+                  onToggle={() => togglePublished(a)}
                   getPreview={getPreview}
                 />
               ))}
