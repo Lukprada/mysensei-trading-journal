@@ -58,7 +58,7 @@ export default function AnalysisEditor() {
     }
   }
 
-  async function handleSave(publish = false) {
+  async function handleSave() {
     if (!user) return;
     if (!title.trim()) { toast.error("Title is required"); return; }
     if (!content.trim()) { toast.error("Content is required"); return; }
@@ -70,8 +70,8 @@ export default function AnalysisEditor() {
       content,
       cover_image_url: coverUrl || null,
       tags,
-      published: publish,
-      published_at: publish ? new Date().toISOString() : null,
+      published,
+      published_at: published ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     };
 
@@ -87,7 +87,7 @@ export default function AnalysisEditor() {
       toast.error("Failed to save");
       console.error(error);
     } else {
-      toast.success(publish ? "Published!" : "Saved as draft");
+      toast.success(published ? "Saved & public" : "Saved as private draft");
       navigate("/analysis");
     }
   }
