@@ -3,6 +3,7 @@ import { LayoutDashboard, PlusCircle, List, Brain, LogOut, Activity, FileText, R
 import { AccountSelector } from "@/components/AccountSelector";
 import { CreateAccountDialog } from "@/components/CreateAccountDialog";
 import { ManageAccountsDialog } from "@/components/ManageAccountsDialog";
+import { CashFlowDialog } from "@/components/CashFlowDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -51,6 +52,7 @@ export function AppSidebar() {
           <AccountSelector />
           <CreateAccountDialog />
           <ManageAccountsDialog />
+          <CashFlowDialog />
         </div>
       </SidebarHeader>
 

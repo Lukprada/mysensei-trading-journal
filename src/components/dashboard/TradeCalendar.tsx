@@ -154,13 +154,16 @@ export function TradeCalendar({ selectedDate, onSelectDate }: TradeCalendarProps
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         {/* Calendar Grid */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* Weekday headers */}
           <div className="grid grid-cols-7 gap-1 mb-1">
             {weekdays.map((d) => (
-              <div key={d} className="text-center text-[10px] text-muted-foreground py-1.5 font-medium uppercase tracking-wider">{d}</div>
+              <div key={d} className="text-center text-[9px] sm:text-[10px] text-muted-foreground py-1.5 font-medium uppercase tracking-wider">
+                <span className="hidden sm:inline">{d}</span>
+                <span className="sm:hidden">{d.charAt(0)}</span>
+              </div>
             ))}
           </div>
 
@@ -194,7 +197,7 @@ export function TradeCalendar({ selectedDate, onSelectDate }: TradeCalendarProps
                       onSelectDate(isSelected ? null : dateKey);
                     }
                   }}
-                  className={`relative rounded-lg p-1.5 min-h-[72px] flex flex-col transition-all duration-200
+                  className={`relative rounded-md sm:rounded-lg p-1 sm:p-1.5 min-h-[56px] sm:min-h-[72px] flex flex-col transition-all duration-200
                     ${bgClass}
                     ${dayTrades ? "cursor-pointer" : ""}
                     ${today ? "ring-1 ring-primary/50 shadow-[0_0_12px_hsl(var(--primary)/0.15)]" : ""}
@@ -202,20 +205,20 @@ export function TradeCalendar({ selectedDate, onSelectDate }: TradeCalendarProps
                   `}
                 >
                   {/* Day number */}
-                  <span className={`font-mono-numbers text-[11px] leading-none ${today ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                  <span className={`font-mono-numbers text-[10px] sm:text-[11px] leading-none ${today ? "text-primary font-bold" : "text-muted-foreground"}`}>
                     {format(day, "d")}
                   </span>
 
                   {/* Trade data */}
                   {dayTrades && inMonth && (
-                    <div className="flex-1 flex flex-col justify-center items-center mt-1">
-                      <span className={`text-sm font-bold font-mono-numbers leading-tight ${dayTrades.pnl >= 0 ? "text-profit" : "text-loss"}`}>
+                    <div className="flex-1 flex flex-col justify-center items-center mt-0.5 sm:mt-1">
+                      <span className={`text-[11px] sm:text-sm font-bold font-mono-numbers leading-tight ${dayTrades.pnl >= 0 ? "text-profit" : "text-loss"}`}>
                         {formatPnl(dayTrades.pnl)}
                       </span>
-                      <span className="text-[9px] text-muted-foreground font-mono-numbers mt-0.5">
+                      <span className="text-[8px] sm:text-[9px] text-muted-foreground font-mono-numbers mt-0.5 hidden sm:block">
                         {dayTrades.total} trade{dayTrades.total !== 1 ? "s" : ""}
                       </span>
-                      <span className="text-[9px] text-muted-foreground font-mono-numbers">
+                      <span className="text-[8px] sm:text-[9px] text-muted-foreground font-mono-numbers">
                         {dayTrades.winRate.toFixed(0)}%
                       </span>
                     </div>
@@ -226,13 +229,12 @@ export function TradeCalendar({ selectedDate, onSelectDate }: TradeCalendarProps
           </div>
         </div>
 
-        {/* Week Summaries Sidebar */}
-        <div className="w-28 flex-shrink-0 space-y-1.5 pt-7">
+        {/* Week Summaries — stack horizontal on mobile, vertical sidebar on desktop */}
+        <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-1 lg:w-28 lg:flex-shrink-0 gap-1.5 lg:pt-7">
           {weekSummaries.map((week) => (
             <div
               key={week.weekNum}
               className="rounded-lg bg-secondary/20 border border-border/20 p-2 text-center"
-              style={{ minHeight: "72px" }}
             >
               <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Week {week.weekNum}</p>
               <p className={`text-sm font-bold font-mono-numbers mt-0.5 ${
