@@ -4,7 +4,7 @@ import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sid
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ParticleGrid } from "@/components/effects/ParticleGrid";
 import { GridOverlay } from "@/components/effects/GridOverlay";
-import { Menu } from "lucide-react";
+
 
 function AutoCloseOnNavigate() {
   const location = useLocation();
@@ -26,11 +26,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex-1 flex flex-col min-h-screen relative z-10 min-w-0">
           <header className="h-14 flex items-center border-b border-primary/8 px-3 sm:px-4 glass-card sticky top-0 z-20 gap-2">
             <SidebarTrigger
-              className="h-10 w-10 rounded-lg border border-primary/20 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary transition-colors shadow-[0_0_12px_hsl(var(--primary)/0.15)] [&>svg]:hidden relative"
+              className="h-10 w-10 rounded-lg border border-primary/20 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary transition-colors shadow-[0_0_12px_hsl(var(--primary)/0.15)] [&_svg]:h-5 [&_svg]:w-5"
               aria-label="Toggle navigation"
-            >
-              <Menu className="h-5 w-5" />
-            </SidebarTrigger>
+            />
             <span className="text-[10px] text-muted-foreground font-mono-numbers tracking-wider hidden sm:inline">MENU</span>
             <div className="ml-auto flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-primary animate-pulse-glow" />
