@@ -56,6 +56,7 @@ function AppRoutes() {
           <Route path="/analysis/:id" element={<AnalysisView />} />
           <Route path="/analysis/:id/edit" element={<AnalysisEditor />} />
           <Route path="/myfxbook-sync" element={<MyfxbookSync />} />
+          <Route path="/journal" element={<Journal />} />
           <Route path="/quant" element={<QuantAnalytics />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
