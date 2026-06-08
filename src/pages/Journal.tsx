@@ -167,7 +167,7 @@ export default function Journal() {
               key={selected.id}
               entry={selected}
               trades={allTrades}
-              onSave={(patch) => update(selected.id, patch)}
+              onSave={async (patch) => { await update(selected.id, patch); }}
               onDelete={() => remove(selected.id)}
             />
           ) : (
