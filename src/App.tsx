@@ -16,6 +16,7 @@ import AnalysisList from "./pages/AnalysisList";
 import AnalysisEditor from "./pages/AnalysisEditor";
 import AnalysisView from "./pages/AnalysisView";
 import MyfxbookSync from "./pages/MyfxbookSync";
+import Journal from "./pages/Journal";
 import QuantAnalytics from "./pages/QuantAnalytics";
 import PublicAnalysisView from "./pages/PublicAnalysisView";
 import Auth from "./pages/Auth";
