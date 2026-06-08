@@ -221,6 +221,48 @@ export type Database = {
         }
         Relationships: []
       }
+      journal_entries: {
+        Row: {
+          content: string
+          created_at: string
+          entry_date: string
+          id: string
+          linked_trade_ids: string[] | null
+          mood: string | null
+          tags: string[] | null
+          title: string
+          tradingview_links: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          entry_date?: string
+          id?: string
+          linked_trade_ids?: string[] | null
+          mood?: string | null
+          tags?: string[] | null
+          title?: string
+          tradingview_links?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          entry_date?: string
+          id?: string
+          linked_trade_ids?: string[] | null
+          mood?: string | null
+          tags?: string[] | null
+          title?: string
+          tradingview_links?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       myfxbook_credentials: {
         Row: {
           created_at: string
