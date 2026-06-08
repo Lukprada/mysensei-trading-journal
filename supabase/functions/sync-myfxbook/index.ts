@@ -180,19 +180,46 @@ Deno.serve(async (req) => {
       console.log(`Account ${mfxAcc.name}: ${trades.length} trades`);
 
       for (const trade of trades) {
-        // Use a composite external_id to prevent duplicates
-        const externalId = `mfxb_${mfxAcc.id}_${trade.openTime}_${trade.symbol}_${trade.openPrice}`;
+        const symbol = (trade.symbol || "").replace(/[^A-Za-z0-9]/g, "");
+        const action = (trade.action || "").toLowerCase();
+        const isBalanceEntry =
+          !symbol ||
+          action.includes("balance") ||
+          action.includes("credit") ||
+          action.includes("deposit") ||
+          action.includes("withdraw") ||
+          ((trade.openPrice || 0) === 0 && (trade.closePrice || 0) === 0);
 
-        // Check if trade already exists
+        // Myfxbook returns deposits/withdrawals as history rows with no symbol → route to cash_flows
+        if (isBalanceEntry) {
+          const amt = Number(trade.profit || 0);
+          if (amt === 0) continue;
+          const when = trade.closeTime || trade.openTime || new Date().toISOString();
+          const extId = `mfxb_bal_${mfxAcc.id}_${when}_${amt}`;
+          await supabase.from("cash_flows").upsert({
+            user_id: user.id,
+            account_id: accountId,
+            flow_type: amt >= 0 ? "deposit" : "withdrawal",
+            amount: Math.abs(amt),
+            occurred_at: new Date(when).toISOString(),
+            source: "myfxbook",
+            external_id: extId,
+            note: trade.comment || (action || "Balance entry"),
+          }, { onConflict: "external_id" });
+          continue;
+        }
+
+        const externalId = `mfxb_${mfxAcc.id}_${trade.openTime}_${symbol}_${trade.openPrice}`;
+
         const { data: existing } = await supabase
           .from("trades")
           .select("id")
           .eq("external_id", externalId)
           .single();
 
-        if (existing) continue; // Skip duplicates
+        if (existing) continue;
 
-        const direction = trade.action?.toLowerCase().includes("buy") ? "long" : "short";
+        const direction = action.includes("buy") ? "long" : "short";
         const closeDate = trade.closeTime ? new Date(trade.closeTime).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
 
         const { error: insertError } = await supabase
@@ -200,7 +227,7 @@ Deno.serve(async (req) => {
           .insert({
             user_id: user.id,
             account_id: accountId,
-            asset: trade.symbol?.replace(/[^A-Za-z0-9]/g, "") || "UNKNOWN",
+            asset: symbol,
             entry_price: trade.openPrice || 0,
             exit_price: trade.closePrice || 0,
             direction,
