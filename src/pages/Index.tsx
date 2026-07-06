@@ -5,7 +5,7 @@ import { TradeCalendar } from "@/components/dashboard/TradeCalendar";
 import { TradeListPanel } from "@/components/dashboard/TradeListPanel";
 import { useTrading } from "@/contexts/TradingContext";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link2, PlusCircle, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 const Dashboard = () => {
   const { activeAccount, accounts, allTrades, loading } = useTrading();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const tradePanelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedDate && tradePanelRef.current && window.innerWidth < 1024) {
+      tradePanelRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedDate]);
 
   const hasAccounts = accounts.length > 0;
   const hasTrades = allTrades.length > 0;
@@ -104,7 +111,9 @@ const Dashboard = () => {
             <div className="lg:col-span-2">
               <TradeCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
             </div>
-            <TradeListPanel selectedDate={selectedDate} onClearDate={() => setSelectedDate(null)} />
+            <div ref={tradePanelRef} className="scroll-mt-16">
+              <TradeListPanel selectedDate={selectedDate} onClearDate={() => setSelectedDate(null)} />
+            </div>
           </div>
         </>
       )}
