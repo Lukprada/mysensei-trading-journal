@@ -1,7 +1,8 @@
 import { useTrading } from "@/contexts/TradingContext";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Calendar as CalIcon } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   eachDayOfInterval, format, isSameMonth, isToday,
