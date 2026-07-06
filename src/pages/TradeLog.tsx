@@ -1,12 +1,13 @@
 import { useTrading } from "@/contexts/TradingContext";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight, Eye, Trash2 } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Eye, Trash2, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const TradeLog = () => {
-  const { trades, deleteTrade } = useTrading();
+  const { trades, deleteTrade, addCashFlow } = useTrading();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "wins" | "losses">("all");
 
@@ -16,6 +17,24 @@ const TradeLog = () => {
     if (filter === "losses") return t.pnl < 0;
     return true;
   });
+
+  const convertToCashFlow = async (trade: typeof trades[number]) => {
+    const type: "deposit" | "withdrawal" = trade.pnl >= 0 ? "deposit" : "withdrawal";
+    const ok = window.confirm(
+      `Convert this ${trade.asset} entry into a ${type} of $${Math.abs(trade.pnl).toFixed(2)}?\n\nThe trade will be removed and re-registered under Deposits / Withdrawals.`
+    );
+    if (!ok) return;
+    await addCashFlow({
+      accountId: trade.accountId,
+      flowType: type,
+      amount: Math.abs(trade.pnl),
+      occurredAt: new Date(trade.date).toISOString(),
+      source: "manual",
+      note: `Converted from imported entry (${trade.asset || "UNKNOWN"})`,
+    });
+    await deleteTrade(trade.id);
+    toast.success(`Registered as ${type}`);
+  };
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
