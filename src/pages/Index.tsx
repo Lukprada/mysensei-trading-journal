@@ -111,7 +111,9 @@ const Dashboard = () => {
             <div className="lg:col-span-2">
               <TradeCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
             </div>
-            <TradeListPanel selectedDate={selectedDate} onClearDate={() => setSelectedDate(null)} />
+            <div ref={tradePanelRef} className="scroll-mt-16">
+              <TradeListPanel selectedDate={selectedDate} onClearDate={() => setSelectedDate(null)} />
+            </div>
           </div>
         </>
       )}
