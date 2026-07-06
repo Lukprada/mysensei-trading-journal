@@ -107,6 +107,17 @@ const TradeLog = () => {
                   <td className="p-3 text-xs text-muted-foreground capitalize">{trade.mentalState}</td>
                   <td className="p-3 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {(!trade.positionSize || trade.positionSize === 0 || trade.asset === "UNKNOWN") && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-primary hover:text-primary"
+                          title={`Register as ${trade.pnl >= 0 ? "deposit" : "withdrawal"}`}
+                          onClick={() => convertToCashFlow(trade)}
+                        >
+                          <Wallet className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/trade/${trade.id}`)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
