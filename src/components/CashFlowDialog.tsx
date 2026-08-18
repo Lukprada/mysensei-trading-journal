@@ -26,7 +26,7 @@ export function CashFlowDialog() {
     if (!accountId) return toast.error("Pick an account");
     if (!amt || amt <= 0) return toast.error("Enter a positive amount");
     setSaving(true);
-    await addCashFlow({
+    const saved = await addCashFlow({
       accountId,
       flowType: type,
       amount: amt,
@@ -35,6 +35,7 @@ export function CashFlowDialog() {
       note: note || undefined,
     });
     setSaving(false);
+    if (!saved) return;
     setAmount("");
     setNote("");
     toast.success(`${type === "deposit" ? "Deposit" : "Withdrawal"} logged`);

@@ -124,6 +124,7 @@ Deno.serve(async (req) => {
 
     let totalTradesSynced = 0;
     const syncedAccounts: string[] = [];
+    let latestTradeAt: string | null = null;
 
     for (const mfxAcc of myfxbookAccounts) {
       // 4. Upsert account in our DB
@@ -180,6 +181,11 @@ Deno.serve(async (req) => {
       console.log(`Account ${mfxAcc.name}: ${trades.length} trades`);
 
       for (const trade of trades) {
+        const tradeTimestamp = trade.closeTime || trade.openTime;
+        if (tradeTimestamp) {
+          const parsedTimestamp = new Date(tradeTimestamp).toISOString();
+          if (!latestTradeAt || parsedTimestamp > latestTradeAt) latestTradeAt = parsedTimestamp;
+        }
         const symbol = (trade.symbol || "").replace(/[^A-Za-z0-9]/g, "");
         const action = (trade.action || "").toLowerCase();
         const isBalanceEntry =
@@ -231,7 +237,7 @@ Deno.serve(async (req) => {
             entry_price: trade.openPrice || 0,
             exit_price: trade.closePrice || 0,
             direction,
-            position_size: trade.sizing?.value || 0.01,
+            position_size: Number(trade.sizing?.value ?? 0),
             date: closeDate,
             pips: trade.pips || 0,
             pnl: trade.profit || 0,
@@ -308,6 +314,7 @@ Deno.serve(async (req) => {
       accounts: syncedAccounts,
       tradesImported: totalTradesSynced,
       totalAccounts: myfxbookAccounts.length,
+      latestTradeAt,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

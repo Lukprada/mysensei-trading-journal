@@ -27,7 +27,7 @@ export function AccountSelector() {
         <SelectItem value="all">
           <span className="flex items-center gap-2">
             <CircleDot className="h-3.5 w-3.5" />
-            Global (All Accounts)
+            All Accounts
           </span>
         </SelectItem>
         {accounts.map((acc) => (

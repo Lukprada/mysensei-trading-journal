@@ -112,7 +112,7 @@ export function EquityCurve() {
         <div>
           <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-glow" />
-            Equity Curve {activeAccount ? `· ${activeAccount.name}` : "· Global"}
+            Equity Curve {activeAccount ? `· ${activeAccount.name}` : "· All Accounts"}
           </h3>
           <p className="text-[11px] text-muted-foreground mt-1 font-mono-numbers flex flex-wrap gap-x-3">
             <span>Balance: <span className="text-foreground">{symbol}{fmt(currentBalance)}</span></span>

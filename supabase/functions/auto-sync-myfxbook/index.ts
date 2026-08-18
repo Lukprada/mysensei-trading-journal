@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const results: { userId: string; trades: number; error?: string }[] = [];
+  const results: { userId: string; trades: number; latestTradeAt?: string | null; error?: string }[] = [];
 
   for (const creds of allCreds) {
     try {
@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
       }
 
       let userTradeCount = 0;
+      let latestTradeAt: string | null = null;
 
       for (const mfxAcc of accountsData.accounts || []) {
         // Upsert account
@@ -93,7 +94,34 @@ Deno.serve(async (req) => {
         if (historyData.error === true) continue;
 
         for (const trade of historyData.history || []) {
-          const externalId = `mfxb_${mfxAcc.id}_${trade.openTime}_${trade.symbol}_${trade.openPrice}`;
+          const tradeTimestamp = trade.closeTime || trade.openTime;
+          if (tradeTimestamp) {
+            const parsedTimestamp = new Date(tradeTimestamp).toISOString();
+            if (!latestTradeAt || parsedTimestamp > latestTradeAt) latestTradeAt = parsedTimestamp;
+          }
+          const symbol = (trade.symbol || "").replace(/[^A-Za-z0-9]/g, "");
+          const action = (trade.action || "").toLowerCase();
+          const isBalanceEntry = !symbol || action.includes("balance") || action.includes("credit") || action.includes("deposit") || action.includes("withdraw") || ((trade.openPrice || 0) === 0 && (trade.closePrice || 0) === 0);
+
+          if (isBalanceEntry) {
+            const amount = Number(trade.profit || 0);
+            if (amount !== 0) {
+              const occurredAt = trade.closeTime || trade.openTime || new Date().toISOString();
+              await supabase.from("cash_flows").upsert({
+                user_id: creds.user_id,
+                account_id: accountId,
+                flow_type: amount >= 0 ? "deposit" : "withdrawal",
+                amount: Math.abs(amount),
+                occurred_at: new Date(occurredAt).toISOString(),
+                source: "myfxbook",
+                external_id: `mfxb_bal_${mfxAcc.id}_${occurredAt}_${amount}`,
+                note: trade.comment || action || "Balance entry",
+              }, { onConflict: "external_id" });
+            }
+            continue;
+          }
+
+          const externalId = `mfxb_${mfxAcc.id}_${trade.openTime}_${symbol}_${trade.openPrice}`;
 
           const { data: existing } = await supabase
             .from("trades")
@@ -111,11 +139,11 @@ Deno.serve(async (req) => {
           const { error: insertErr } = await supabase.from("trades").insert({
             user_id: creds.user_id,
             account_id: accountId,
-            asset: trade.symbol?.replace(/[^A-Za-z0-9]/g, "") || "UNKNOWN",
+            asset: symbol,
             entry_price: trade.openPrice || 0,
             exit_price: trade.closePrice || 0,
             direction,
-            position_size: trade.sizing?.value || 0.01,
+            position_size: Number(trade.sizing?.value ?? 0),
             date: closeDate,
             pips: trade.pips || 0,
             pnl: trade.profit || 0,
@@ -177,7 +205,7 @@ Deno.serve(async (req) => {
       // Logout
       await fetch(`${MYFXBOOK_API}/logout.json?session=${session}`).catch(() => {});
 
-      results.push({ userId: creds.user_id, trades: userTradeCount });
+      results.push({ userId: creds.user_id, trades: userTradeCount, latestTradeAt });
     } catch (err) {
       results.push({ userId: creds.user_id, trades: 0, error: String(err) });
     }

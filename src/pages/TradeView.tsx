@@ -137,7 +137,7 @@ const TradeView = () => {
         <ArrowLeft className="h-4 w-4 mr-2" /> Back
       </Button>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Main trade detail */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 space-y-6">
           <div className="flex items-center justify-between">
@@ -287,7 +287,7 @@ const TradeView = () => {
               animate={{ opacity: 1, x: 0, width: 380 }}
               exit={{ opacity: 0, x: 30, width: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="shrink-0 rounded-lg border border-border bg-card self-start sticky top-20 overflow-hidden flex flex-col"
+              className="w-full lg:w-auto shrink-0 rounded-lg border border-border bg-card self-start lg:sticky top-20 overflow-hidden flex flex-col"
               style={{ maxHeight: "calc(100vh - 120px)" }}
             >
               {/* Header */}

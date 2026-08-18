@@ -20,7 +20,7 @@ interface TradingContextType {
   updateTrade: (id: string, updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes">>) => Promise<void>;
   linkTrades: (tradeIds: string[]) => Promise<void>;
   unlinkTrade: (tradeId: string) => Promise<void>;
-  addCashFlow: (flow: Omit<CashFlow, "id">) => Promise<void>;
+  addCashFlow: (flow: Omit<CashFlow, "id">) => Promise<boolean>;
   deleteCashFlow: (id: string) => Promise<void>;
   getTradeById: (id: string) => Trade | undefined;
   updateTradeCritique: (tradeId: string, critique: string) => void;
@@ -73,6 +73,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
         balance: Number(a.balance),
         initialBalance: Number(a.initial_balance),
         createdAt: a.created_at,
+        myfxbookAccountId: a.myfxbook_account_id || undefined,
       }));
 
       const mappedTrades: Trade[] = (tradeRes.data || []).map((t: any) => ({
@@ -299,13 +300,24 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const unlinkTrade = useCallback(async (tradeId: string) => {
+    const current = allTrades.find((trade) => trade.id === tradeId);
     const { error } = await supabase.from("trades").update({ linked_group_id: null }).eq("id", tradeId);
     if (error) { toast.error("Failed to unlink"); return; }
-    setAllTrades((prev) => prev.map((t) => (t.id === tradeId ? { ...t, linkedGroupId: undefined } : t)));
-  }, []);
+    const remaining = current?.linkedGroupId
+      ? allTrades.filter((trade) => trade.linkedGroupId === current.linkedGroupId && trade.id !== tradeId)
+      : [];
+    if (remaining.length === 1) {
+      await supabase.from("trades").update({ linked_group_id: null }).eq("id", remaining[0].id);
+    }
+    setAllTrades((prev) => prev.map((trade) =>
+      trade.id === tradeId || (remaining.length === 1 && trade.id === remaining[0].id)
+        ? { ...trade, linkedGroupId: undefined }
+        : trade
+    ));
+  }, [allTrades]);
 
   const addCashFlow = useCallback(async (flow: Omit<CashFlow, "id">) => {
-    if (!user) return;
+    if (!user) return false;
     const { data, error } = await supabase.from("cash_flows").insert({
       user_id: user.id,
       account_id: flow.accountId,
@@ -315,7 +327,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       source: flow.source,
       note: flow.note ?? null,
     }).select().single();
-    if (error || !data) { toast.error("Failed to log cash flow"); return; }
+    if (error || !data) { toast.error("Failed to log cash flow"); return false; }
     setCashFlows((prev) => [...prev, {
       id: data.id,
       accountId: data.account_id,
@@ -325,13 +337,33 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       source: data.source,
       note: data.note || undefined,
     }]);
-  }, [user]);
+    if (flow.source === "manual") {
+      const account = accounts.find((item) => item.id === flow.accountId);
+      if (account) {
+        const delta = flow.flowType === "deposit" ? flow.amount : -flow.amount;
+        const balance = Math.round((account.balance + delta) * 100) / 100;
+        const { error: balanceError } = await supabase.from("accounts").update({ balance }).eq("id", flow.accountId);
+        if (!balanceError) setAccounts((prev) => prev.map((item) => item.id === flow.accountId ? { ...item, balance } : item));
+      }
+    }
+    return true;
+  }, [user, accounts]);
 
   const deleteCashFlow = useCallback(async (id: string) => {
+    const flow = cashFlows.find((item) => item.id === id);
     const { error } = await supabase.from("cash_flows").delete().eq("id", id);
     if (error) { toast.error("Failed to delete"); return; }
     setCashFlows((prev) => prev.filter((f) => f.id !== id));
-  }, []);
+    if (flow?.source === "manual") {
+      const account = accounts.find((item) => item.id === flow.accountId);
+      if (account) {
+        const reversal = flow.flowType === "deposit" ? -flow.amount : flow.amount;
+        const balance = Math.round((account.balance + reversal) * 100) / 100;
+        const { error: balanceError } = await supabase.from("accounts").update({ balance }).eq("id", flow.accountId);
+        if (!balanceError) setAccounts((prev) => prev.map((item) => item.id === flow.accountId ? { ...item, balance } : item));
+      }
+    }
+  }, [cashFlows, accounts]);
 
   const scopedCashFlows = activeAccountId ? cashFlows.filter((f) => f.accountId === activeAccountId) : cashFlows;
 
