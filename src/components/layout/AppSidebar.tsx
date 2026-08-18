@@ -1,7 +1,6 @@
 import { NavLink } from "@/components/NavLink";
 import { LayoutDashboard, PlusCircle, List, Brain, LogOut, Activity, FileText, RefreshCw, BarChart3, BookOpen } from "lucide-react";
 import { AccountSelector } from "@/components/AccountSelector";
-import { CreateAccountDialog } from "@/components/CreateAccountDialog";
 import { ManageAccountsDialog } from "@/components/ManageAccountsDialog";
 import { CashFlowDialog } from "@/components/CashFlowDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -51,7 +50,6 @@ export function AppSidebar() {
         </div>
         <div className="space-y-2">
           <AccountSelector />
-          <CreateAccountDialog />
           <ManageAccountsDialog />
           <CashFlowDialog />
         </div>

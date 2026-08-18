@@ -3,7 +3,7 @@ import { useTrading } from "@/contexts/TradingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Link2, Plus, X, ExternalLink, Save } from "lucide-react";
+import { Link2, Plus, X, ExternalLink, Save, BookOpen, Target, Brain, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Trade } from "@/types/trading";
 import { LinkTradesDialog } from "./LinkTradesDialog";
@@ -58,7 +58,7 @@ export function TradeJournalPanel({ trade }: Props) {
   return (
     <div className="space-y-4">
       {/* Link trades */}
-      <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+       <div className="rounded-lg border border-border bg-card p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
             <Link2 className="h-4 w-4 text-primary" /> Linked Position
@@ -116,11 +116,17 @@ export function TradeJournalPanel({ trade }: Props) {
             <Save className="h-3.5 w-3.5" /> {savingNotes ? "Saving..." : "Save"}
           </Button>
         </div>
-        <Textarea
+         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-muted-foreground">
+           <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5 text-primary" /> Market context</span>
+           <span className="flex items-center gap-1.5"><Target className="h-3.5 w-3.5 text-primary" /> Entry & exit plan</span>
+           <span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5 text-primary" /> Emotions</span>
+           <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Lesson & next action</span>
+         </div>
+         <Textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Write freely — context, emotions, what went right, what to fix next time. This stays attached to this trade."
-          className="min-h-[200px] resize-y text-sm leading-relaxed"
+          className="min-h-[320px] resize-y text-sm leading-relaxed"
         />
       </div>
 

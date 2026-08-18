@@ -231,7 +231,7 @@ Deno.serve(async (req) => {
             entry_price: trade.openPrice || 0,
             exit_price: trade.closePrice || 0,
             direction,
-            position_size: trade.sizing?.value || 0.01,
+            position_size: Number(trade.sizing?.value ?? 0),
             date: closeDate,
             pips: trade.pips || 0,
             pnl: trade.profit || 0,

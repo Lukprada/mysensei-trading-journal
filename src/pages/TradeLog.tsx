@@ -24,7 +24,7 @@ const TradeLog = () => {
       `Convert this ${trade.asset} entry into a ${type} of $${Math.abs(trade.pnl).toFixed(2)}?\n\nThe trade will be removed and re-registered under Deposits / Withdrawals.`
     );
     if (!ok) return;
-    await addCashFlow({
+    const saved = await addCashFlow({
       accountId: trade.accountId,
       flowType: type,
       amount: Math.abs(trade.pnl),
@@ -32,6 +32,7 @@ const TradeLog = () => {
       source: "manual",
       note: `Converted from imported entry (${trade.asset || "UNKNOWN"})`,
     });
+    if (!saved) return;
     await deleteTrade(trade.id);
     toast.success(`Registered as ${type}`);
   };

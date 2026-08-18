@@ -16,19 +16,21 @@ export function LinkTradesDialog({ trade, open, onOpenChange }: Props) {
   const { allTrades, linkTrades, unlinkTrade } = useTrading();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  // Candidates: same asset & account, within ±3 days, not the trade itself
-  const tradeDate = new Date(trade.date).getTime();
-  const window = 3 * 24 * 60 * 60 * 1000;
+  // Suggestions: same account, symbol and direction, closed within six hours.
+  const tradeTime = new Date(trade.exitTime || `${trade.date}T12:00:00`).getTime();
+  const suggestionWindow = 6 * 60 * 60 * 1000;
   const candidates = allTrades.filter((t) =>
     t.id !== trade.id &&
     t.accountId === trade.accountId &&
     t.asset === trade.asset &&
-    Math.abs(new Date(t.date).getTime() - tradeDate) <= window
+    t.direction === trade.direction &&
+    (!t.linkedGroupId || t.linkedGroupId === trade.linkedGroupId) &&
+    Math.abs(new Date(t.exitTime || `${t.date}T12:00:00`).getTime() - tradeTime) <= suggestionWindow
   );
 
   // Already linked group members
   const groupMembers = trade.linkedGroupId
-    ? allTrades.filter((t) => t.linkedGroupId === trade.linkedGroupId)
+    ? allTrades.filter((t) => t.linkedGroupId === trade.linkedGroupId && t.id !== trade.id)
     : [];
 
   function toggle(id: string) {
@@ -57,7 +59,7 @@ export function LinkTradesDialog({ trade, open, onOpenChange }: Props) {
 
         {groupMembers.length > 0 && (
           <div className="text-xs space-y-2 border border-primary/20 rounded-md p-3 bg-primary/5">
-            <p className="font-medium text-primary">Already linked ({groupMembers.length + 1} trades)</p>
+             <p className="font-medium text-primary">Already linked ({groupMembers.length + 1} trades)</p>
             {groupMembers.map((m) => (
               <div key={m.id} className="flex items-center justify-between">
                 <span className="font-mono-numbers">{m.date} · {m.positionSize} lots · {m.pnl >= 0 ? "+" : ""}${m.pnl.toFixed(2)}</span>
@@ -70,7 +72,7 @@ export function LinkTradesDialog({ trade, open, onOpenChange }: Props) {
         )}
 
         <div className="space-y-2 mt-2">
-          <p className="text-xs text-muted-foreground">Candidates on {trade.asset} within 3 days:</p>
+          <p className="text-xs text-muted-foreground">Suggested {trade.asset} fills closed within 6 hours:</p>
           {candidates.length === 0 ? (
             <p className="text-sm text-muted-foreground italic">No other trades match.</p>
           ) : (

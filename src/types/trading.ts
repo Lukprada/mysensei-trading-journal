@@ -15,6 +15,7 @@ export interface Account {
   balance: number;
   initialBalance: number;
   createdAt: string;
+  myfxbookAccountId?: string;
 }
 
 export interface Trade {

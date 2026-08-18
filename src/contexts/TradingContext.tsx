@@ -20,7 +20,7 @@ interface TradingContextType {
   updateTrade: (id: string, updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes">>) => Promise<void>;
   linkTrades: (tradeIds: string[]) => Promise<void>;
   unlinkTrade: (tradeId: string) => Promise<void>;
-  addCashFlow: (flow: Omit<CashFlow, "id">) => Promise<void>;
+  addCashFlow: (flow: Omit<CashFlow, "id">) => Promise<boolean>;
   deleteCashFlow: (id: string) => Promise<void>;
   getTradeById: (id: string) => Trade | undefined;
   updateTradeCritique: (tradeId: string, critique: string) => void;
@@ -73,6 +73,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
         balance: Number(a.balance),
         initialBalance: Number(a.initial_balance),
         createdAt: a.created_at,
+        myfxbookAccountId: a.myfxbook_account_id || undefined,
       }));
 
       const mappedTrades: Trade[] = (tradeRes.data || []).map((t: any) => ({
@@ -305,7 +306,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addCashFlow = useCallback(async (flow: Omit<CashFlow, "id">) => {
-    if (!user) return;
+    if (!user) return false;
     const { data, error } = await supabase.from("cash_flows").insert({
       user_id: user.id,
       account_id: flow.accountId,
@@ -315,7 +316,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       source: flow.source,
       note: flow.note ?? null,
     }).select().single();
-    if (error || !data) { toast.error("Failed to log cash flow"); return; }
+    if (error || !data) { toast.error("Failed to log cash flow"); return false; }
     setCashFlows((prev) => [...prev, {
       id: data.id,
       accountId: data.account_id,
@@ -325,6 +326,7 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
       source: data.source,
       note: data.note || undefined,
     }]);
+    return true;
   }, [user]);
 
   const deleteCashFlow = useCallback(async (id: string) => {

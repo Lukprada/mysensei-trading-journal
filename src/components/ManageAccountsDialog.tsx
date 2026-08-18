@@ -94,9 +94,11 @@ function AccountRow({ account, tradeCount }: { account: Account; tradeCount: num
             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditing(true)}>
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button size="icon" variant="ghost" className="h-8 w-8 text-loss hover:text-loss hover:bg-loss/10" onClick={() => setConfirmOpen(true)}>
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+             {!account.myfxbookAccountId && (
+               <Button size="icon" variant="ghost" className="h-8 w-8 text-loss hover:text-loss hover:bg-loss/10" onClick={() => setConfirmOpen(true)}>
+                 <Trash2 className="h-3.5 w-3.5" />
+               </Button>
+             )}
           </div>
         </div>
       )}
@@ -137,7 +139,7 @@ export function ManageAccountsDialog() {
         <DialogHeader>
           <DialogTitle className="font-display tracking-wider text-sm">MANAGE ACCOUNTS</DialogTitle>
           <DialogDescription className="text-xs">
-            Rename, retag as Live/Demo/Funded, or remove accounts. Deleting an account also removes its trades.
+             Rename and tag imported accounts as Live, Demo, or Funded. Synced accounts are removed by disconnecting Myfxbook.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 mt-2">

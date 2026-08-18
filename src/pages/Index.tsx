@@ -6,7 +6,7 @@ import { TradeListPanel } from "@/components/dashboard/TradeListPanel";
 import { useTrading } from "@/contexts/TradingContext";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
-import { Link2, PlusCircle, RefreshCw } from "lucide-react";
+import { Link2, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -64,19 +64,13 @@ const Dashboard = () => {
           </h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
             Connect Myfxbook to automatically import your live, demo, or funded
-            accounts — or create one manually to start logging trades.
+            accounts. Each imported account can then be renamed and tagged as Live, Demo, or Funded.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="flex items-center justify-center">
             <Button asChild>
               <Link to="/myfxbook-sync">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Connect Myfxbook
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/new-trade">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Log a trade manually
               </Link>
             </Button>
           </div>
@@ -89,7 +83,7 @@ const Dashboard = () => {
             <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-5 text-sm text-muted-foreground flex items-center justify-between gap-4 flex-wrap">
               <div>
                 <span className="text-foreground font-medium">No trades yet on this account.</span>{" "}
-                Sync Myfxbook or log a trade to populate your dashboard.
+                Sync Myfxbook to populate your dashboard.
               </div>
               <Button asChild size="sm" variant="outline">
                 <Link to="/myfxbook-sync">
