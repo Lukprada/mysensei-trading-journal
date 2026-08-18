@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const results: { userId: string; trades: number; error?: string }[] = [];
+  const results: { userId: string; trades: number; latestTradeAt?: string | null; error?: string }[] = [];
 
   for (const creds of allCreds) {
     try {

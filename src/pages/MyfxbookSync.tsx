@@ -605,7 +605,7 @@ export default function MyfxbookSync() {
               </AccordionTrigger>
               <AccordionContent className="text-sm text-muted-foreground space-y-3">
                 <p>
-                  We do <strong>not</strong> store your Myfxbook password in plain text. Your credentials are stored in the same encrypted database that powers your journal, protected by Row-Level Security (RLS) so only you can access them.
+                  Your credentials are stored in the encrypted backend database and protected by account-level access rules. The sync service uses them only to open a temporary Myfxbook session. For the strongest security, use a unique Myfxbook password that is not reused for your broker, email, or journal login.
                 </p>
                 <ul className="list-disc ml-5 space-y-1">
                   <li>
