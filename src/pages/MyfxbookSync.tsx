@@ -53,7 +53,7 @@ function parseMyfxbookCSV(text: string): CSVTrade[] {
       closeTime: cols[colClose] || "",
       symbol: cols[colSymbol] || "UNKNOWN",
       action: cols[colAction] || "",
-      lots: parseFloat(cols[colLots]) || 0.01,
+      lots: Number.isFinite(parseFloat(cols[colLots])) ? parseFloat(cols[colLots]) : 0,
       openPrice: parseFloat(cols[colOpenPrice]) || 0,
       closePrice: parseFloat(cols[colClosePrice]) || 0,
       pips: parseFloat(cols[colPips]) || 0,
@@ -229,7 +229,7 @@ export default function MyfxbookSync() {
           entry_price: trade.openPrice || 0,
           exit_price: trade.closePrice || 0,
           direction,
-          position_size: trade.lots || 0.01,
+          position_size: trade.lots,
           date: closeDate,
           pips: trade.pips || 0,
           pnl: trade.profit || 0,
@@ -461,6 +461,7 @@ export default function MyfxbookSync() {
                 <ul className="text-sm text-muted-foreground space-y-1 ml-6">
                   <li>Accounts found: {syncResult.totalAccounts}</li>
                   <li>New trades imported: {syncResult.tradesImported}</li>
+                  <li>Latest trade returned by Myfxbook: {syncResult.latestTradeAt ? new Date(syncResult.latestTradeAt).toLocaleString() : "None"}</li>
                   {syncResult.accounts?.map((name: string, i: number) => (
                     <li key={i}>• {name}</li>
                   ))}
@@ -471,8 +472,7 @@ export default function MyfxbookSync() {
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/20 rounded-lg p-3">
               <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
-                Myfxbook API returns only the last 50 closed trades per account. 
-                Duplicates are automatically detected and skipped. Sync regularly to keep your journal up to date.
+                 Myfxbook only returns trades already processed in its own portfolio. If this date is stale after syncing, the delay is upstream at Myfxbook or the broker connection—not in this journal. Duplicates are skipped automatically.
               </span>
             </div>
           </CardContent>

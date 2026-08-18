@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
       }
 
       let userTradeCount = 0;
+      let latestTradeAt: string | null = null;
 
       for (const mfxAcc of accountsData.accounts || []) {
         // Upsert account
@@ -93,6 +94,11 @@ Deno.serve(async (req) => {
         if (historyData.error === true) continue;
 
         for (const trade of historyData.history || []) {
+          const tradeTimestamp = trade.closeTime || trade.openTime;
+          if (tradeTimestamp) {
+            const parsedTimestamp = new Date(tradeTimestamp).toISOString();
+            if (!latestTradeAt || parsedTimestamp > latestTradeAt) latestTradeAt = parsedTimestamp;
+          }
           const symbol = (trade.symbol || "").replace(/[^A-Za-z0-9]/g, "");
           const action = (trade.action || "").toLowerCase();
           const isBalanceEntry = !symbol || action.includes("balance") || action.includes("credit") || action.includes("deposit") || action.includes("withdraw") || ((trade.openPrice || 0) === 0 && (trade.closePrice || 0) === 0);
@@ -199,7 +205,7 @@ Deno.serve(async (req) => {
       // Logout
       await fetch(`${MYFXBOOK_API}/logout.json?session=${session}`).catch(() => {});
 
-      results.push({ userId: creds.user_id, trades: userTradeCount });
+      results.push({ userId: creds.user_id, trades: userTradeCount, latestTradeAt });
     } catch (err) {
       results.push({ userId: creds.user_id, trades: 0, error: String(err) });
     }
