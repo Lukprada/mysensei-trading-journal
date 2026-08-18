@@ -28,7 +28,7 @@ export function TradeJournalPanel({ trade }: Props) {
   useEffect(() => {
     setNotes(trade.journalNotes || "");
     setLinks(trade.tradingviewLinks || []);
-  }, [trade.id]);
+  }, [trade.id, trade.journalNotes, trade.tradingviewLinks]);
 
   const groupCount = trade.linkedGroupId
     ? allTrades.filter((t) => t.linkedGroupId === trade.linkedGroupId).length
