@@ -49,7 +49,10 @@ export interface Trade {
   journalNotes?: string;
   tradingviewLinks?: string[];
   linkedGroupId?: string;
+  /** "manual" for trades you logged yourself, "myfxbook" once the broker feed confirms them */
+  source?: string;
 }
+
 
 export interface CashFlow {
   id: string;

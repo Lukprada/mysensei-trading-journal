@@ -3,12 +3,17 @@ import { useTrading } from "@/contexts/TradingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Link2, Plus, X, ExternalLink, Save, BookOpen, Target, Brain, CheckCircle2 } from "lucide-react";
+import { Link2, Plus, X, ExternalLink, Save, BookOpen, Target, Brain, CheckCircle2, Share2, Users } from "lucide-react";
 import { toast } from "sonner";
 import type { Trade } from "@/types/trading";
 import { LinkTradesDialog } from "./LinkTradesDialog";
+import { ForexFactoryNews } from "./ForexFactoryNews";
 
-interface Props { trade: Trade }
+interface Props {
+  trade: Trade;
+  /** Hide the news block in tight spaces (e.g. inline in the trade log) */
+  compact?: boolean;
+}
 
 function normalizeTV(raw: string): string {
   const url = raw.trim();
@@ -17,7 +22,7 @@ function normalizeTV(raw: string): string {
   return url;
 }
 
-export function TradeJournalPanel({ trade }: Props) {
+export function TradeJournalPanel({ trade, compact = false }: Props) {
   const { updateTrade, allTrades } = useTrading();
   const [notes, setNotes] = useState(trade.journalNotes || "");
   const [savingNotes, setSavingNotes] = useState(false);
@@ -30,15 +35,19 @@ export function TradeJournalPanel({ trade }: Props) {
     setLinks(trade.tradingviewLinks || []);
   }, [trade.id, trade.journalNotes, trade.tradingviewLinks]);
 
-  const groupCount = trade.linkedGroupId
-    ? allTrades.filter((t) => t.linkedGroupId === trade.linkedGroupId).length
-    : 0;
+  const groupTrades = trade.linkedGroupId
+    ? allTrades.filter((t) => t.linkedGroupId === trade.linkedGroupId)
+    : [];
+  const groupCount = groupTrades.length;
+  const shared = groupCount > 1;
+  const groupPnl = groupTrades.reduce((sum, t) => sum + t.pnl, 0);
+  const groupLots = groupTrades.reduce((sum, t) => sum + (t.positionSize || 0), 0);
 
   async function saveNotes() {
     setSavingNotes(true);
-    await updateTrade(trade.id, { journalNotes: notes });
+    await updateTrade(trade.id, { journalNotes: notes }, { shareWithGroup: true });
     setSavingNotes(false);
-    toast.success("Journal saved");
+    toast.success(shared ? `Journal saved for all ${groupCount} linked fills` : "Journal saved");
   }
 
   async function addLink() {
@@ -46,32 +55,77 @@ export function TradeJournalPanel({ trade }: Props) {
     const next = [...links, normalizeTV(linkInput)];
     setLinks(next);
     setLinkInput("");
-    await updateTrade(trade.id, { tradingviewLinks: next });
+    await updateTrade(trade.id, { tradingviewLinks: next }, { shareWithGroup: true });
   }
 
   async function removeLink(i: number) {
     const next = links.filter((_, idx) => idx !== i);
     setLinks(next);
-    await updateTrade(trade.id, { tradingviewLinks: next });
+    await updateTrade(trade.id, { tradingviewLinks: next }, { shareWithGroup: true });
+  }
+
+  async function shareJournal() {
+    const header = shared
+      ? `${trade.asset} ${trade.direction} — linked position (${groupCount} fills, ${groupLots.toFixed(2)} lots, ${groupPnl >= 0 ? "+" : ""}$${groupPnl.toFixed(2)})`
+      : `${trade.asset} ${trade.direction} — ${trade.date} (${trade.pnl >= 0 ? "+" : ""}$${trade.pnl.toFixed(2)})`;
+    const text = [
+      `# Trading Journal — ${header}`,
+      "",
+      `Entry ${trade.entryPrice} → Exit ${trade.exitPrice} · ${trade.positionSize} lots · ${trade.pips} pips`,
+      trade.setupTag ? `Setup: ${trade.setupTag}` : "",
+      "",
+      notes || "(no journal written yet)",
+      "",
+      links.length ? `Charts:\n${links.join("\n")}` : "",
+    ].filter(Boolean).join("\n");
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `Trading Journal — ${trade.asset}`, text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        toast.success("Journal page copied to clipboard");
+      }
+    } catch {
+      /* user cancelled */
+    }
   }
 
   return (
     <div className="space-y-4">
-      {/* Link trades */}
-       <div className="rounded-lg border border-border bg-card p-4 space-y-3">
-        <div className="flex items-center justify-between">
+      {/* Linked position — one journal for every fill */}
+      <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
             <Link2 className="h-4 w-4 text-primary" /> Linked Position
           </h3>
-          <Button size="sm" variant="outline" onClick={() => setLinkDialogOpen(true)}>
-            {groupCount > 0 ? `Manage (${groupCount})` : "Link partial fills"}
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="ghost" className="gap-1" onClick={shareJournal}>
+              <Share2 className="h-3.5 w-3.5" /> Share
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setLinkDialogOpen(true)}>
+              {shared ? `Manage (${groupCount})` : "Link fills"}
+            </Button>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          {groupCount > 0
-            ? `This trade is part of a group of ${groupCount} fills on ${trade.asset}.`
-            : `Did you scale in/out of ${trade.asset}? Link other fills here to treat them as one position.`}
-        </p>
+        {shared ? (
+          <div className="space-y-2">
+            <p className="text-xs text-primary flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5" />
+              One position, {groupCount} layered fills · {groupLots.toFixed(2)} lots · combined{" "}
+              <span className={groupPnl >= 0 ? "text-profit" : "text-loss"}>
+                {groupPnl >= 0 ? "+" : ""}${groupPnl.toFixed(2)}
+              </span>
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              This journal page is shared — anything you write or attach here appears on every fill in the group.
+            </p>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Did you scale in/out of {trade.asset}? Link the other fills so they share one journal page.
+          </p>
+        )}
       </div>
 
       {/* TradingView chart links */}
@@ -108,6 +162,14 @@ export function TradeJournalPanel({ trade }: Props) {
         )}
       </div>
 
+      {/* Real-world news for the record */}
+      {!compact && (
+        <ForexFactoryNews
+          date={trade.date}
+          onAttach={(snapshot) => setNotes((prev) => `${prev}${snapshot}`)}
+        />
+      )}
+
       {/* Long-form journal */}
       <div className="rounded-lg border border-border bg-card p-4 space-y-2">
         <div className="flex items-center justify-between">
@@ -116,17 +178,17 @@ export function TradeJournalPanel({ trade }: Props) {
             <Save className="h-3.5 w-3.5" /> {savingNotes ? "Saving..." : "Save"}
           </Button>
         </div>
-         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-muted-foreground">
-           <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5 text-primary" /> Market context</span>
-           <span className="flex items-center gap-1.5"><Target className="h-3.5 w-3.5 text-primary" /> Entry & exit plan</span>
-           <span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5 text-primary" /> Emotions</span>
-           <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Lesson & next action</span>
-         </div>
-         <Textarea
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5 text-primary" /> Market context</span>
+          <span className="flex items-center gap-1.5"><Target className="h-3.5 w-3.5 text-primary" /> Entry & exit plan</span>
+          <span className="flex items-center gap-1.5"><Brain className="h-3.5 w-3.5 text-primary" /> Emotions</span>
+          <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Lesson & next action</span>
+        </div>
+        <Textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Write freely — context, emotions, what went right, what to fix next time. This stays attached to this trade."
-          className="min-h-[320px] resize-y text-sm leading-relaxed"
+          className={`${compact ? "min-h-[200px]" : "min-h-[320px]"} resize-y text-sm leading-relaxed`}
         />
       </div>
 

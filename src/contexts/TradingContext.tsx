@@ -17,7 +17,12 @@ interface TradingContextType {
   setActiveAccount: (id: string | null) => void;
   addTrade: (data: TradeFormData) => Promise<void>;
   deleteTrade: (id: string) => Promise<void>;
-  updateTrade: (id: string, updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes">>) => Promise<void>;
+  updateTrade: (
+    id: string,
+    updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes" | "mentalState" | "setupTag" | "rulesFollowed">>,
+    options?: { shareWithGroup?: boolean },
+  ) => Promise<void>;
+
   linkTrades: (tradeIds: string[]) => Promise<void>;
   unlinkTrade: (tradeId: string) => Promise<void>;
   addCashFlow: (flow: Omit<CashFlow, "id">) => Promise<boolean>;
@@ -105,6 +110,8 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
         journalNotes: t.journal_notes || undefined,
         tradingviewLinks: Array.isArray(t.tradingview_links) ? t.tradingview_links : [],
         linkedGroupId: t.linked_group_id || undefined,
+        source: t.source || "manual",
+
       }));
 
       const mappedFlows: CashFlow[] = (flowRes.data || []).map((f: any) => ({
@@ -279,16 +286,31 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
     return data.publicUrl;
   }, [user]);
 
-  const updateTrade = useCallback(async (id: string, updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes">>) => {
+  const updateTrade = useCallback(async (
+    id: string,
+    updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes" | "mentalState" | "setupTag" | "rulesFollowed">>,
+    options?: { shareWithGroup?: boolean },
+  ) => {
     const payload: any = {};
     if (updates.journalNotes !== undefined) payload.journal_notes = updates.journalNotes;
     if (updates.tradingviewLinks !== undefined) payload.tradingview_links = updates.tradingviewLinks;
     if (updates.linkedGroupId !== undefined) payload.linked_group_id = updates.linkedGroupId;
     if (updates.notes !== undefined) payload.notes = updates.notes;
-    const { error } = await supabase.from("trades").update(payload).eq("id", id);
+    if (updates.mentalState !== undefined) payload.mental_state = updates.mentalState;
+    if (updates.setupTag !== undefined) payload.setup_tag = updates.setupTag;
+    if (updates.rulesFollowed !== undefined) payload.rules_followed = updates.rulesFollowed;
+
+    // A linked position is one trade in the trader's mind — its journal is shared by every fill.
+    const groupId = allTrades.find((t) => t.id === id)?.linkedGroupId;
+    const targetIds = options?.shareWithGroup && groupId
+      ? allTrades.filter((t) => t.linkedGroupId === groupId).map((t) => t.id)
+      : [id];
+
+    const { error } = await supabase.from("trades").update(payload).in("id", targetIds);
     if (error) { toast.error("Failed to save"); console.error(error); return; }
-    setAllTrades((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
-  }, []);
+    setAllTrades((prev) => prev.map((t) => (targetIds.includes(t.id) ? { ...t, ...updates } : t)));
+  }, [allTrades]);
+
 
   const linkTrades = useCallback(async (tradeIds: string[]) => {
     if (tradeIds.length < 2) return;
