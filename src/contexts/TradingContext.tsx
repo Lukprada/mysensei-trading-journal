@@ -105,6 +105,8 @@ export function TradingProvider({ children }: { children: React.ReactNode }) {
         journalNotes: t.journal_notes || undefined,
         tradingviewLinks: Array.isArray(t.tradingview_links) ? t.tradingview_links : [],
         linkedGroupId: t.linked_group_id || undefined,
+        source: t.source || "manual",
+
       }));
 
       const mappedFlows: CashFlow[] = (flowRes.data || []).map((f: any) => ({
