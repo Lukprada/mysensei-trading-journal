@@ -17,7 +17,12 @@ interface TradingContextType {
   setActiveAccount: (id: string | null) => void;
   addTrade: (data: TradeFormData) => Promise<void>;
   deleteTrade: (id: string) => Promise<void>;
-  updateTrade: (id: string, updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes">>) => Promise<void>;
+  updateTrade: (
+    id: string,
+    updates: Partial<Pick<Trade, "journalNotes" | "tradingviewLinks" | "linkedGroupId" | "notes" | "mentalState" | "setupTag" | "rulesFollowed">>,
+    options?: { shareWithGroup?: boolean },
+  ) => Promise<void>;
+
   linkTrades: (tradeIds: string[]) => Promise<void>;
   unlinkTrade: (tradeId: string) => Promise<void>;
   addCashFlow: (flow: Omit<CashFlow, "id">) => Promise<boolean>;
