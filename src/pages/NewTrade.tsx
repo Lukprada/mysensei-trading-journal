@@ -44,6 +44,9 @@ const NewTrade = () => {
   const [dragOver, setDragOver] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+
 
 
   const handleFileUpload = useCallback(async (file: File) => {
