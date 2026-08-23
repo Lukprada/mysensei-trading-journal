@@ -38,10 +38,16 @@ const NewTrade = () => {
     [form.entryPrice, form.stopLoss, form.takeProfit, form.direction]
   );
 
+  const [closeTime, setCloseTime] = useState(
+    new Date().toTimeString().slice(0, 5)
+  );
   const [dragOver, setDragOver] = useState(false);
   const [screenshot, setScreenshot] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+
+
 
   const handleFileUpload = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -76,7 +82,12 @@ const NewTrade = () => {
       return;
     }
     setSubmitting(true);
-    await addTrade({ ...form, screenshotUrl: screenshot || undefined });
+    await addTrade({
+      ...form,
+      exitTime: closeTime ? new Date(`${form.date}T${closeTime}:00`).toISOString() : undefined,
+      screenshotUrl: screenshot || undefined,
+    });
+
     toast.success("Trade logged successfully!");
     setSubmitting(false);
     navigate("/trade-log");
@@ -143,13 +154,27 @@ const NewTrade = () => {
             </div>
           </div>
 
-          {/* Date & Mental State */}
+          {/* Date, Time & Mental State */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Date</Label>
               <Input type="date" className="bg-secondary border-border"
                 value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
             </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Close Time (for broker matching)</Label>
+              <Input type="time" className="bg-secondary border-border font-mono-numbers"
+                value={closeTime} onChange={(e) => setCloseTime(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+            Broker feeds can lag by hours. Log the trade now with its close time — when the synced copy
+            arrives you can link them from the trade's journal so they share one record.
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Mental State</Label>
               <Select value={form.mentalState} onValueChange={(v) => setForm((f) => ({ ...f, mentalState: v as MentalState }))}>
