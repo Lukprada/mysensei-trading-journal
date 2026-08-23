@@ -82,7 +82,12 @@ const NewTrade = () => {
       return;
     }
     setSubmitting(true);
-    await addTrade({ ...form, screenshotUrl: screenshot || undefined });
+    await addTrade({
+      ...form,
+      exitTime: closeTime ? new Date(`${form.date}T${closeTime}:00`).toISOString() : undefined,
+      screenshotUrl: screenshot || undefined,
+    });
+
     toast.success("Trade logged successfully!");
     setSubmitting(false);
     navigate("/trade-log");
