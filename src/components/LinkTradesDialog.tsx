@@ -83,11 +83,13 @@ export function LinkTradesDialog({ trade, open, onOpenChange }: Props) {
         )}
 
         <div className="space-y-2 mt-2">
-          <p className="text-xs text-muted-foreground">Suggested {trade.asset} fills closed within 6 hours:</p>
+          <p className="text-xs text-muted-foreground">
+            Suggested {trade.asset} fills from the same day — approve the ones that were the same position:
+          </p>
           {candidates.length === 0 ? (
             <p className="text-sm text-muted-foreground italic">No other trades match.</p>
           ) : (
-            candidates.map((c) => {
+            candidates.map(({ trade: c, strong }) => {
               const inGroup = c.linkedGroupId && c.linkedGroupId === trade.linkedGroupId;
               return (
                 <label key={c.id} className={`flex items-center gap-3 p-2 rounded-md border cursor-pointer transition-colors ${
@@ -95,7 +97,14 @@ export function LinkTradesDialog({ trade, open, onOpenChange }: Props) {
                 } ${inGroup ? "opacity-50" : ""}`}>
                   <Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggle(c.id)} disabled={!!inGroup} />
                   <div className="flex-1 text-sm flex items-center justify-between font-mono-numbers">
-                    <span>{c.date} · {c.direction} · {c.positionSize} lots</span>
+                    <span className="flex items-center gap-2">
+                      {c.date} · {c.direction} · {c.positionSize} lots
+                      {strong && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/25 font-display tracking-wider">
+                          SAME HOUR
+                        </span>
+                      )}
+                    </span>
                     <span className={c.pnl >= 0 ? "text-profit" : "text-loss"}>
                       {c.pnl >= 0 ? "+" : ""}${c.pnl.toFixed(2)}
                     </span>
@@ -105,6 +114,7 @@ export function LinkTradesDialog({ trade, open, onOpenChange }: Props) {
             })
           )}
         </div>
+
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
