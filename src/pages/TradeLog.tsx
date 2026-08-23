@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight, Eye, Trash2, BookOpen, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { TradeJournalPanel } from "@/components/TradeJournalPanel";
 
 const TradeLog = () => {
@@ -61,9 +61,8 @@ const TradeLog = () => {
                 const isOpen = openJournalId === trade.id;
                 const hasJournal = !!(trade.journalNotes?.trim() || trade.tradingviewLinks?.length);
                 return (
-                  <>
+                  <Fragment key={trade.id}>
                     <motion.tr
-                      key={trade.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: i * 0.03 }}
@@ -131,7 +130,7 @@ const TradeLog = () => {
                         </motion.tr>
                       )}
                     </AnimatePresence>
-                  </>
+                  </Fragment>
                 );
               })}
             </tbody>

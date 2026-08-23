@@ -16,17 +16,28 @@ export function LinkTradesDialog({ trade, open, onOpenChange }: Props) {
   const { allTrades, linkTrades, unlinkTrade } = useTrading();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  // Suggestions: same account, symbol and direction, closed within six hours.
+  // Suggestions: same account, symbol and direction, closed on the same day.
+  // Fills within one hour are flagged as strong "same position" candidates.
   const tradeTime = new Date(trade.exitTime || `${trade.date}T12:00:00`).getTime();
-  const suggestionWindow = 6 * 60 * 60 * 1000;
-  const candidates = allTrades.filter((t) =>
-    t.id !== trade.id &&
-    t.accountId === trade.accountId &&
-    t.asset === trade.asset &&
-    t.direction === trade.direction &&
-    (!t.linkedGroupId || t.linkedGroupId === trade.linkedGroupId) &&
-    Math.abs(new Date(t.exitTime || `${t.date}T12:00:00`).getTime() - tradeTime) <= suggestionWindow
-  );
+  const dayWindow = 24 * 60 * 60 * 1000;
+  const hourWindow = 60 * 60 * 1000;
+  const candidates = allTrades
+    .filter((t) =>
+      t.id !== trade.id &&
+      t.accountId === trade.accountId &&
+      t.asset === trade.asset &&
+      t.direction === trade.direction &&
+      (!t.linkedGroupId || t.linkedGroupId === trade.linkedGroupId) &&
+      (t.date === trade.date ||
+        Math.abs(new Date(t.exitTime || `${t.date}T12:00:00`).getTime() - tradeTime) <= dayWindow)
+    )
+    .map((t) => ({
+      trade: t,
+      strong:
+        Math.abs(new Date(t.exitTime || `${t.date}T12:00:00`).getTime() - tradeTime) <= hourWindow,
+    }))
+    .sort((a, b) => Number(b.strong) - Number(a.strong));
+
 
   // Already linked group members
   const groupMembers = trade.linkedGroupId
