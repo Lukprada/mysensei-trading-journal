@@ -81,8 +81,8 @@ const TradeLog = () => {
                       </td>
                       <td className="p-3 text-sm font-medium text-foreground">
                         <div className="flex items-center gap-2">
-                          {bundle.asLinkedToggle()}
                           {trade.asset}
+
                           {bundle.linked && (
                             <button
                               onClick={() => setExpandedKey(isExpanded ? null : bundle.key)}
