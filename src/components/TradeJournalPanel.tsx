@@ -26,12 +26,15 @@ function normalizeTV(raw: string): string {
 }
 
 export function TradeJournalPanel({ trade, compact = false }: Props) {
-  const { updateTrade, allTrades } = useTrading();
+  const { updateTrade, allTrades, accounts, updateTradeCritique } = useTrading();
   const [notes, setNotes] = useState(trade.journalNotes || "");
   const [savingNotes, setSavingNotes] = useState(false);
   const [linkInput, setLinkInput] = useState("");
   const [links, setLinks] = useState<string[]>(trade.tradingviewLinks || []);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [critique, setCritique] = useState(trade.aiCritique || "");
+  const [analyzing, setAnalyzing] = useState(false);
+
 
   useEffect(() => {
     setNotes(trade.journalNotes || "");
