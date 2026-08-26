@@ -49,6 +49,44 @@ export function TradeJournalPanel({ trade, compact = false }: Props) {
   const groupPnl = groupTrades.reduce((sum, t) => sum + t.pnl, 0);
   const groupLots = groupTrades.reduce((sum, t) => sum + (t.positionSize || 0), 0);
 
+  const bundle = bundleFromTrade(trade, allTrades);
+
+  async function analyzeBundle() {
+    setAnalyzing(true);
+    setCritique("");
+    let acc = "";
+    const accountType = accounts.find((a) => a.id === trade.accountId)?.type || "unknown";
+    try {
+      await streamSenseiChat({
+        messages: [],
+        tradeContext: {
+          trade_details: bundleToTradeDetails(bundle),
+          user_notes: bundleToNarrative(bundle, notes),
+          user_mood: trade.mentalState,
+          screenshot_url: links[0] || trade.screenshotUrl || null,
+          account_type: accountType,
+        },
+        onDelta: (chunk) => {
+          acc += chunk;
+          setCritique(acc);
+        },
+        onDone: () => {
+          setAnalyzing(false);
+          if (acc.trim()) updateTradeCritique(trade.id, acc);
+        },
+        onError: (status) => {
+          setAnalyzing(false);
+          toast.error(status === 429 ? "Rate limited — try again shortly" : "Sensei couldn't analyse this bundle");
+        },
+      });
+    } catch {
+      setAnalyzing(false);
+      toast.error("Sensei couldn't analyse this bundle");
+    }
+  }
+
+
+
   async function saveNotes() {
     setSavingNotes(true);
     await updateTrade(trade.id, { journalNotes: notes }, { shareWithGroup: true });
