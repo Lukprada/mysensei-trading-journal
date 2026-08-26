@@ -3,11 +3,14 @@ import { useTrading } from "@/contexts/TradingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Link2, Plus, X, ExternalLink, Save, BookOpen, Target, Brain, CheckCircle2, Share2, Users } from "lucide-react";
+import { Link2, Plus, X, ExternalLink, Save, BookOpen, Target, Brain, CheckCircle2, Share2, Users, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Trade } from "@/types/trading";
 import { LinkTradesDialog } from "./LinkTradesDialog";
 import { ForexFactoryNews } from "./ForexFactoryNews";
+import { bundleFromTrade, bundleToTradeDetails, bundleToNarrative } from "@/lib/tradeBundle";
+import { streamSenseiChat } from "@/lib/streamChat";
+
 
 interface Props {
   trade: Trade;
