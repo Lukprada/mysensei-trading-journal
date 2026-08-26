@@ -172,6 +172,30 @@ export function TradeJournalPanel({ trade, compact = false }: Props) {
         )}
       </div>
 
+      {/* Bundled AI analysis — the whole position, not a single fill */}
+      <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" /> Sensei — Bundle Analysis
+          </h3>
+          <Button size="sm" onClick={analyzeBundle} disabled={analyzing} className="gap-1.5">
+            {analyzing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {analyzing ? "Analysing..." : critique ? "Re-analyse" : "Analyse position"}
+          </Button>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Sends the whole bundle — {bundle.fills.length} execution{bundle.fills.length > 1 ? "s" : ""}, {bundle.totalLots.toFixed(2)} lots,
+          avg entry {bundle.avgEntry.toFixed(5)} → exit {bundle.avgExit.toFixed(5)}, {bundle.totalPnl >= 0 ? "+" : ""}${bundle.totalPnl.toFixed(2)} — plus your journal, charts and rules.
+        </p>
+        {critique && (
+          <div className="rounded-md border border-border bg-card p-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+            {critique}
+          </div>
+        )}
+      </div>
+
+
+
       {/* TradingView chart links */}
       <div className="rounded-lg border border-border bg-card p-4 space-y-3">
         <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
