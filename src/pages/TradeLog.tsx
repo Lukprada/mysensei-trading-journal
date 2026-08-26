@@ -1,21 +1,23 @@
 import { useTrading } from "@/contexts/TradingContext";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight, Eye, Trash2, BookOpen, ChevronDown } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Eye, Trash2, BookOpen, ChevronDown, Layers, CornerDownRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, Fragment } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { TradeJournalPanel } from "@/components/TradeJournalPanel";
+import { buildTradeBundles } from "@/lib/tradeBundle";
 
 const TradeLog = () => {
   const { trades, deleteTrade } = useTrading();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "wins" | "losses">("all");
-  const [openJournalId, setOpenJournalId] = useState<string | null>(null);
+  const [openJournalKey, setOpenJournalKey] = useState<string | null>(null);
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
-  const sorted = [...trades].sort((a, b) => b.date.localeCompare(a.date));
-  const filtered = sorted.filter((t) => {
-    if (filter === "wins") return t.pnl > 0;
-    if (filter === "losses") return t.pnl < 0;
+  const bundles = useMemo(() => buildTradeBundles(trades), [trades]);
+  const filtered = bundles.filter((b) => {
+    if (filter === "wins") return b.totalPnl > 0;
+    if (filter === "losses") return b.totalPnl < 0;
     return true;
   });
 
@@ -24,7 +26,9 @@ const TradeLog = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-foreground">Trade Log</h2>
-          <p className="text-sm text-muted-foreground mt-1">{trades.length} total trades · tap Journal to open the full record</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {bundles.length} positions · {trades.length} executions · layered fills are bundled into one record
+          </p>
         </div>
         <div className="flex gap-1 bg-secondary rounded-lg p-1">
           {(["all", "wins", "losses"] as const).map((f) => (
@@ -47,7 +51,7 @@ const TradeLog = () => {
             <thead>
               <tr className="border-b border-border bg-secondary/50">
                 <th className="text-left text-xs text-muted-foreground font-medium p-3">Date</th>
-                <th className="text-left text-xs text-muted-foreground font-medium p-3">Asset</th>
+                <th className="text-left text-xs text-muted-foreground font-medium p-3">Position</th>
                 <th className="text-left text-xs text-muted-foreground font-medium p-3">Direction</th>
                 <th className="text-right text-xs text-muted-foreground font-medium p-3">Lots</th>
                 <th className="text-right text-xs text-muted-foreground font-medium p-3">Pips</th>
@@ -57,23 +61,39 @@ const TradeLog = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((trade, i) => {
-                const isOpen = openJournalId === trade.id;
+              {filtered.map((bundle, i) => {
+                const trade = bundle.primary;
+                const isOpen = openJournalKey === bundle.key;
+                const isExpanded = expandedKey === bundle.key;
                 const hasJournal = !!(trade.journalNotes?.trim() || trade.tradingviewLinks?.length);
                 return (
-                  <Fragment key={trade.id}>
+                  <Fragment key={bundle.key}>
                     <motion.tr
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: i * 0.03 }}
                       className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors"
                     >
-                      <td className="p-3 text-sm text-muted-foreground font-mono-numbers">{trade.date}</td>
+                      <td className="p-3 text-sm text-muted-foreground font-mono-numbers whitespace-nowrap">
+                        {bundle.linked && bundle.firstDate !== bundle.lastDate
+                          ? `${bundle.firstDate} → ${bundle.lastDate}`
+                          : bundle.lastDate}
+                      </td>
                       <td className="p-3 text-sm font-medium text-foreground">
-                        {trade.asset}
-                        {trade.linkedGroupId && (
-                          <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-display tracking-wider">LINKED</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {trade.asset}
+
+                          {bundle.linked && (
+                            <button
+                              onClick={() => setExpandedKey(isExpanded ? null : bundle.key)}
+                              className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 font-display tracking-wider hover:bg-primary/20"
+                            >
+                              <Layers className="h-3 w-3" />
+                              {bundle.fills.length} FILLS
+                              <ChevronDown className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3">
                         <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
@@ -83,16 +103,16 @@ const TradeLog = () => {
                           {trade.direction}
                         </span>
                       </td>
-                      <td className="p-3 text-sm text-right font-mono-numbers text-muted-foreground">{trade.positionSize}</td>
-                      <td className={`p-3 text-sm text-right font-mono-numbers ${trade.pips >= 0 ? "text-profit" : "text-loss"}`}>
-                        {trade.pips > 0 ? "+" : ""}{trade.pips}
+                      <td className="p-3 text-sm text-right font-mono-numbers text-muted-foreground">{bundle.totalLots.toFixed(2)}</td>
+                      <td className={`p-3 text-sm text-right font-mono-numbers ${bundle.totalPips >= 0 ? "text-profit" : "text-loss"}`}>
+                        {bundle.totalPips > 0 ? "+" : ""}{bundle.totalPips.toFixed(1)}
                       </td>
-                      <td className={`p-3 text-sm text-right font-mono-numbers font-semibold ${trade.pnl >= 0 ? "text-profit" : "text-loss"}`}>
-                        {trade.pnl >= 0 ? "+" : ""}${trade.pnl.toFixed(2)}
+                      <td className={`p-3 text-sm text-right font-mono-numbers font-semibold ${bundle.totalPnl >= 0 ? "text-profit" : "text-loss"}`}>
+                        {bundle.totalPnl >= 0 ? "+" : ""}${bundle.totalPnl.toFixed(2)}
                       </td>
                       <td className="p-3">
                         <button
-                          onClick={() => setOpenJournalId(isOpen ? null : trade.id)}
+                          onClick={() => setOpenJournalKey(isOpen ? null : bundle.key)}
                           className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border transition-colors ${
                             hasJournal
                               ? "border-primary/40 bg-primary/10 text-primary"
@@ -115,10 +135,48 @@ const TradeLog = () => {
                         </div>
                       </td>
                     </motion.tr>
+
+                    {/* Nested fills — each execution living under its parent position */}
+                    <AnimatePresence initial={false}>
+                      {isExpanded && bundle.linked && bundle.fills.map((fill) => (
+                        <motion.tr
+                          key={`${bundle.key}-${fill.id}`}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="border-b border-border/50 bg-secondary/20 text-xs"
+                        >
+                          <td className="py-2 pl-8 pr-3 text-muted-foreground font-mono-numbers">
+                            <span className="inline-flex items-center gap-1.5">
+                              <CornerDownRight className="h-3 w-3 text-primary/60" />
+                              {fill.date}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-muted-foreground">
+                            {fill.entryPrice} → {fill.exitPrice}
+                          </td>
+                          <td className="py-2 px-3 text-muted-foreground capitalize">{fill.direction}</td>
+                          <td className="py-2 px-3 text-right font-mono-numbers text-muted-foreground">{fill.positionSize}</td>
+                          <td className={`py-2 px-3 text-right font-mono-numbers ${fill.pips >= 0 ? "text-profit" : "text-loss"}`}>
+                            {fill.pips > 0 ? "+" : ""}{fill.pips}
+                          </td>
+                          <td className={`py-2 px-3 text-right font-mono-numbers ${fill.pnl >= 0 ? "text-profit" : "text-loss"}`}>
+                            {fill.pnl >= 0 ? "+" : ""}${fill.pnl.toFixed(2)}
+                          </td>
+                          <td className="py-2 px-3 text-muted-foreground">shared journal</td>
+                          <td className="py-2 px-3 text-right">
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => navigate(`/trade/${fill.id}`)}>
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+
                     <AnimatePresence initial={false}>
                       {isOpen && (
                         <motion.tr
-                          key={`${trade.id}-journal`}
+                          key={`${bundle.key}-journal`}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}

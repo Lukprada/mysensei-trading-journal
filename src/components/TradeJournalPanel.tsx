@@ -3,11 +3,14 @@ import { useTrading } from "@/contexts/TradingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Link2, Plus, X, ExternalLink, Save, BookOpen, Target, Brain, CheckCircle2, Share2, Users } from "lucide-react";
+import { Link2, Plus, X, ExternalLink, Save, BookOpen, Target, Brain, CheckCircle2, Share2, Users, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Trade } from "@/types/trading";
 import { LinkTradesDialog } from "./LinkTradesDialog";
 import { ForexFactoryNews } from "./ForexFactoryNews";
+import { bundleFromTrade, bundleToTradeDetails, bundleToNarrative } from "@/lib/tradeBundle";
+import { streamSenseiChat } from "@/lib/streamChat";
+
 
 interface Props {
   trade: Trade;
@@ -23,12 +26,15 @@ function normalizeTV(raw: string): string {
 }
 
 export function TradeJournalPanel({ trade, compact = false }: Props) {
-  const { updateTrade, allTrades } = useTrading();
+  const { updateTrade, allTrades, accounts, updateTradeCritique } = useTrading();
   const [notes, setNotes] = useState(trade.journalNotes || "");
   const [savingNotes, setSavingNotes] = useState(false);
   const [linkInput, setLinkInput] = useState("");
   const [links, setLinks] = useState<string[]>(trade.tradingviewLinks || []);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [critique, setCritique] = useState(trade.aiCritique || "");
+  const [analyzing, setAnalyzing] = useState(false);
+
 
   useEffect(() => {
     setNotes(trade.journalNotes || "");
@@ -42,6 +48,44 @@ export function TradeJournalPanel({ trade, compact = false }: Props) {
   const shared = groupCount > 1;
   const groupPnl = groupTrades.reduce((sum, t) => sum + t.pnl, 0);
   const groupLots = groupTrades.reduce((sum, t) => sum + (t.positionSize || 0), 0);
+
+  const bundle = bundleFromTrade(trade, allTrades);
+
+  async function analyzeBundle() {
+    setAnalyzing(true);
+    setCritique("");
+    let acc = "";
+    const accountType = accounts.find((a) => a.id === trade.accountId)?.type || "unknown";
+    try {
+      await streamSenseiChat({
+        messages: [],
+        tradeContext: {
+          trade_details: bundleToTradeDetails(bundle),
+          user_notes: bundleToNarrative(bundle, notes),
+          user_mood: trade.mentalState,
+          screenshot_url: links[0] || trade.screenshotUrl || null,
+          account_type: accountType,
+        },
+        onDelta: (chunk) => {
+          acc += chunk;
+          setCritique(acc);
+        },
+        onDone: () => {
+          setAnalyzing(false);
+          if (acc.trim()) updateTradeCritique(trade.id, acc);
+        },
+        onError: (status) => {
+          setAnalyzing(false);
+          toast.error(status === 429 ? "Rate limited — try again shortly" : "Sensei couldn't analyse this bundle");
+        },
+      });
+    } catch {
+      setAnalyzing(false);
+      toast.error("Sensei couldn't analyse this bundle");
+    }
+  }
+
+
 
   async function saveNotes() {
     setSavingNotes(true);
@@ -127,6 +171,30 @@ export function TradeJournalPanel({ trade, compact = false }: Props) {
           </p>
         )}
       </div>
+
+      {/* Bundled AI analysis — the whole position, not a single fill */}
+      <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" /> Sensei — Bundle Analysis
+          </h3>
+          <Button size="sm" onClick={analyzeBundle} disabled={analyzing} className="gap-1.5">
+            {analyzing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {analyzing ? "Analysing..." : critique ? "Re-analyse" : "Analyse position"}
+          </Button>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Sends the whole bundle — {bundle.fills.length} execution{bundle.fills.length > 1 ? "s" : ""}, {bundle.totalLots.toFixed(2)} lots,
+          avg entry {bundle.avgEntry.toFixed(5)} → exit {bundle.avgExit.toFixed(5)}, {bundle.totalPnl >= 0 ? "+" : ""}${bundle.totalPnl.toFixed(2)} — plus your journal, charts and rules.
+        </p>
+        {critique && (
+          <div className="rounded-md border border-border bg-card p-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+            {critique}
+          </div>
+        )}
+      </div>
+
+
 
       {/* TradingView chart links */}
       <div className="rounded-lg border border-border bg-card p-4 space-y-3">
