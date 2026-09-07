@@ -35,15 +35,12 @@ export function AppSidebar() {
     <Sidebar className="border-r border-primary/10 bg-sidebar">
       <SidebarHeader className="p-5 border-b border-primary/10">
         <div className="flex items-center gap-3 mb-5">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-lg bg-primary/20 blur-md animate-pulse-glow" />
-            <div className="relative h-10 w-10 rounded-lg bg-gradient-to-br from-primary/20 to-transparent border border-primary/30 flex items-center justify-center">
-              <Activity className="h-5 w-5 text-primary" />
-            </div>
+          <div className="h-10 w-10 rounded-full border border-primary/40 flex items-center justify-center">
+            <Activity className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <h1 className="text-sm font-bold font-display tracking-[0.15em] text-gradient">TJ</h1>
-            <p className="text-[10px] text-muted-foreground truncate max-w-[140px] font-mono-numbers">
+            <h1 className="text-xl font-display italic text-gradient leading-none">TradeJournal</h1>
+            <p className="text-[10px] text-muted-foreground truncate max-w-[140px] font-mono-numbers mt-1">
               {user?.email}
             </p>
           </div>
@@ -65,8 +62,8 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground transition-all duration-200 group relative overflow-hidden"
-                      activeClassName="text-primary bg-primary/10 border border-primary/15 shadow-[0_0_15px_hsl(var(--primary)/0.05)]"
+                      className="flex items-center gap-3 px-3 py-2.5 text-muted-foreground hover:text-foreground transition-all duration-200 group relative border-l border-transparent"
+                      activeClassName="text-accent-foreground bg-primary/10 border-l-primary"
                     >
                       <item.icon className="h-4 w-4 transition-colors group-hover:text-primary" />
                       <span className="text-sm font-medium">{item.title}</span>
