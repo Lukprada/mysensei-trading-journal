@@ -108,9 +108,11 @@ export default function MyfxbookSync() {
     setSaving(true);
     try {
       if (hasCredentials) {
+        const updateData: any = { email: email.trim(), updated_at: new Date().toISOString() };
+        if (password.trim()) updateData.password = password.trim();
         const { error } = await supabase
           .from("myfxbook_credentials")
-          .update({ email, password, updated_at: new Date().toISOString() })
+          .update(updateData)
           .eq("user_id", user!.id);
         if (error) throw error;
       } else {
@@ -691,3 +693,4 @@ export default function MyfxbookSync() {
     </div>
   );
 }
+

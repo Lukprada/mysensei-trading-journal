@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
 
     console.log("Logging into Myfxbook...");
     const loginRes = await fetch(
-      `${MYFXBOOK_API}/login.json?email=${encodeURIComponent(creds.email)}&password=${encodeURIComponent(creds.password)}`,
+      `${MYFXBOOK_API}/login.json?email=${encodeURIComponent(creds.email.trim())}&password=${encodeURIComponent(creds.password.trim())}`,
     );
     const loginData = await loginRes.json();
 

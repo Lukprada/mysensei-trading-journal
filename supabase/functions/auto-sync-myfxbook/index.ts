@@ -20,7 +20,7 @@ async function runSync() {
     let session: string | null = null;
     try {
       const loginRes = await fetch(
-        `${MYFXBOOK_API}/login.json?email=${encodeURIComponent(creds.email)}&password=${encodeURIComponent(creds.password)}`,
+        `${MYFXBOOK_API}/login.json?email=${encodeURIComponent(creds.email.trim())}&password=${encodeURIComponent(creds.password.trim())}`,
       );
       const loginData = await loginRes.json();
       if (loginData.error === true) {
