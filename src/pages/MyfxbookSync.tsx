@@ -101,7 +101,7 @@ export default function MyfxbookSync() {
   }
 
   async function handleSaveCredentials() {
-    if (!email || !password) {
+    if (!email.trim() || (!hasCredentials && !password.trim())) {
       toast.error("Please enter both email and password");
       return;
     }
@@ -116,7 +116,7 @@ export default function MyfxbookSync() {
       } else {
         const { error } = await supabase
           .from("myfxbook_credentials")
-          .insert({ user_id: user!.id, email, password });
+          .insert({ user_id: user!.id, email: email.trim(), password: password.trim() });
         if (error) throw error;
       }
       setHasCredentials(true);
