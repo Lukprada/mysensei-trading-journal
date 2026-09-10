@@ -53,14 +53,21 @@ Deno.serve(async (req) => {
     }
 
     console.log("Logging into Myfxbook...");
-    const loginRes = await fetch(
-      `${MYFXBOOK_API}/login.json?email=${encodeURIComponent(creds.email.trim())}&password=${encodeURIComponent(creds.password.trim())}`,
-    );
+    const loginUrl = new URL(`${MYFXBOOK_API}/login.json`);
+    loginUrl.searchParams.set("email", String(creds.email ?? "").trim());
+    loginUrl.searchParams.set("password", String(creds.password ?? ""));
+    const loginRes = await fetch(loginUrl, { headers: { Accept: "application/json" } });
+    if (!loginRes.ok) {
+      throw new Error(`Myfxbook is temporarily unavailable (HTTP ${loginRes.status})`);
+    }
     const loginData = await loginRes.json();
 
     if (loginData.error === true) {
-      return new Response(JSON.stringify({ error: `Myfxbook login failed: ${loginData.message}` }), {
-        status: 401,
+      return new Response(JSON.stringify({
+        success: false,
+        code: "MYFXBOOK_AUTH_FAILED",
+        error: "Myfxbook rejected this email/password. Confirm the same login works on Myfxbook, then save it here again.",
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

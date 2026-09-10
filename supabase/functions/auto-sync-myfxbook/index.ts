@@ -19,12 +19,17 @@ async function runSync() {
   for (const creds of allCreds) {
     let session: string | null = null;
     try {
-      const loginRes = await fetch(
-        `${MYFXBOOK_API}/login.json?email=${encodeURIComponent(creds.email.trim())}&password=${encodeURIComponent(creds.password.trim())}`,
-      );
+      const loginUrl = new URL(`${MYFXBOOK_API}/login.json`);
+      loginUrl.searchParams.set("email", String(creds.email ?? "").trim());
+      loginUrl.searchParams.set("password", String(creds.password ?? ""));
+      const loginRes = await fetch(loginUrl, { headers: { Accept: "application/json" } });
+      if (!loginRes.ok) {
+        console.error(`Myfxbook login endpoint returned HTTP ${loginRes.status} for user ${creds.user_id}`);
+        continue;
+      }
       const loginData = await loginRes.json();
       if (loginData.error === true) {
-        console.error(`Login failed for ${creds.user_id}: ${loginData.message}`);
+        console.error(`Myfxbook rejected the saved credentials for user ${creds.user_id}`);
         continue;
       }
       session = loginData.session;
