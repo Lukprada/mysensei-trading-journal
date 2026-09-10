@@ -75,6 +75,7 @@ export default function MyfxbookSync() {
   const [hasCredentials, setHasCredentials] = useState(false);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<any>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
@@ -101,27 +102,31 @@ export default function MyfxbookSync() {
   }
 
   async function handleSaveCredentials() {
-    if (!email || !password) {
+    if (!email.trim() || (!hasCredentials && !password)) {
       toast.error("Please enter both email and password");
       return;
     }
     setSaving(true);
     try {
       if (hasCredentials) {
+        const updateData: any = { email: email.trim(), updated_at: new Date().toISOString() };
+        if (password) updateData.password = password;
         const { error } = await supabase
           .from("myfxbook_credentials")
-          .update({ email, password, updated_at: new Date().toISOString() })
+          .update(updateData)
           .eq("user_id", user!.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("myfxbook_credentials")
-          .insert({ user_id: user!.id, email, password });
+          .insert({ user_id: user!.id, email: email.trim(), password });
         if (error) throw error;
       }
       setHasCredentials(true);
+      setEmail(email.trim());
       setPassword("");
-      toast.success("Credentials saved securely");
+      setSyncError(null);
+      toast.success("Credentials saved. Use Sync Now to verify them with Myfxbook.");
     } catch (err: any) {
       toast.error("Failed to save credentials");
       console.error(err);
@@ -133,6 +138,7 @@ export default function MyfxbookSync() {
   async function handleSync() {
     setSyncing(true);
     setSyncResult(null);
+    setSyncError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke("sync-myfxbook", {
@@ -140,14 +146,16 @@ export default function MyfxbookSync() {
         body: { action: "sync" },
       });
 
-      if (error) throw error;
+      if (error) throw new Error("The sync service could not be reached. Please try again.");
       if (data?.error) throw new Error(data.error);
 
       setSyncResult(data);
       setLastSynced(new Date().toISOString());
       toast.success(`Synced ${data.tradesImported} trades from ${data.totalAccounts} account(s)`);
     } catch (err: any) {
-      toast.error(err.message || "Sync failed");
+      const message = err.message || "Sync failed";
+      setSyncError(message);
+      toast.error(message);
       console.error(err);
     } finally {
       setSyncing(false);
@@ -452,6 +460,16 @@ export default function MyfxbookSync() {
               )}
             </Button>
 
+            {syncError && (
+              <div role="alert" className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-foreground">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                <div>
+                  <p className="font-medium">Myfxbook connection failed</p>
+                  <p className="mt-1 text-muted-foreground">{syncError}</p>
+                </div>
+              </div>
+            )}
+
             {syncResult && (
               <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-green-500">
@@ -691,3 +709,4 @@ export default function MyfxbookSync() {
     </div>
   );
 }
+
