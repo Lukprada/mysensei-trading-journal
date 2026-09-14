@@ -18,6 +18,10 @@ interface Props {
   date: string;
   /** Optional: attach a text snapshot of the news into the journal */
   onAttach?: (snapshot: string) => void;
+  /** Fetch the calendar as soon as the block mounts */
+  autoLoad?: boolean;
+  /** Bubble the loaded events up (so the AI can read them) */
+  onEvents?: (events: NewsEvent[]) => void;
 }
 
 const impactColor: Record<string, string> = {
