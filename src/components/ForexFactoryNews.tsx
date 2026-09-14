@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Newspaper, Loader2, Plus } from "lucide-react";
@@ -18,6 +18,10 @@ interface Props {
   date: string;
   /** Optional: attach a text snapshot of the news into the journal */
   onAttach?: (snapshot: string) => void;
+  /** Fetch the calendar as soon as the block mounts */
+  autoLoad?: boolean;
+  /** Bubble the loaded events up (so the AI can read them) */
+  onEvents?: (events: NewsEvent[]) => void;
 }
 
 const impactColor: Record<string, string> = {
@@ -27,10 +31,12 @@ const impactColor: Record<string, string> = {
   holiday: "bg-muted text-muted-foreground border-border",
 };
 
-export function ForexFactoryNews({ date, onAttach }: Props) {
+export function ForexFactoryNews({ date, onAttach, autoLoad, onEvents }: Props) {
   const [events, setEvents] = useState<NewsEvent[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const eventsCb = useRef(onEvents);
+  eventsCb.current = onEvents;
 
   async function load() {
     setLoading(true);
@@ -40,9 +46,18 @@ export function ForexFactoryNews({ date, onAttach }: Props) {
       toast.error("Couldn't reach the news feed");
       return;
     }
-    setEvents(data?.events ?? []);
+    const list: NewsEvent[] = data?.events ?? [];
+    setEvents(list);
     setNote(data?.note ?? null);
+    eventsCb.current?.(list);
   }
+
+  useEffect(() => {
+    if (!autoLoad) return;
+    setEvents(null);
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoLoad, date]);
 
   function attach() {
     if (!events?.length || !onAttach) return;
